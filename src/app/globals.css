@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Example for a Persian font like Vazirmatn. Adjust path as needed or use a Google Font import. */
+/* 
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+} 
+*/
+
+
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* White */
+    --foreground: 222.2 84% 4.9%; /* Dark Gray for text */
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 13 97% 55%; /* #fc4c1d */
+    --primary-foreground: 210 40% 98%; /* White/Off-white for text on primary */
+
+    --secondary: 210 40% 96.1%; /* Light Gray */
+    --secondary-foreground: 222.2 47.4% 11.2%; /* Darker text on secondary */
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 20.2% 65.1%; /* Muted gray text */
+
+    --accent: 210 40% 94%; /* Slightly darker gray for accent */
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 13 97% 55%; /* Primary color for focus rings */
+
+    --radius: 0.5rem;
+
+    /* Sidebar specific theme variables */
+    --sidebar-background: 0 0% 98%; /* Very light grey / off-white */
+    --sidebar-foreground: 222.2 84% 4.9%; /* Dark text */
+    --sidebar-accent: hsl(var(--primary)); /* Use app primary for accent background */
+    --sidebar-accent-foreground: hsl(var(--primary-foreground)); /* Use app primary-foreground for accent text */
+    --sidebar-border: 220 13% 91%; /* Slightly softer border */
+    --sidebar-ring: hsl(var(--primary));
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%; /* Dark blue/gray */
+    --foreground: 210 40% 98%; /* Light text */
+
+    --card: 224 71.4% 4.1%; /* Slightly darker than background for cards */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 13 90% 50%; /* Slightly adjusted primary for dark mode if needed, keeping vibrant */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 217.2 32.6% 17.5%; /* Darker secondary */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 55.1%; /* Lighter muted text for dark */
+
+    --accent: 217.2 32.6% 22.5%; /* Darker accent */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 45.6%; /* Adjusted destructive for dark */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 217.2 32.6% 25.5%; /* Darker border */
+    --input: 217.2 32.6% 25.5%; /* Darker input */
+    --ring: 13 80% 50%; /* Adjusted ring for dark */
+
+    /* Sidebar dark theme variables */
+    --sidebar-background: 224 71.4% 5.5%; /* Slightly lighter dark for sidebar */
+    --sidebar-foreground: 210 40% 98%; /* Light text */
+    --sidebar-accent: hsl(var(--primary)); /* Use app primary for accent background */
+    --sidebar-accent-foreground: hsl(var(--primary-foreground)); /* Use app primary-foreground for accent text */
+    --sidebar-border: 217.2 32.6% 15.5%; /* Slightly lighter dark border for sidebar */
+    --sidebar-ring: hsl(var(--primary));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    /* Ensure font-sans (defined in tailwind.config.js) is suitable for Persian */
+    @apply bg-background text-foreground font-sans; 
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  main {
+    flex-grow: 1;
+  }
+}
