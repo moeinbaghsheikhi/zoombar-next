@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { AnnouncementBar } from "@/lib/mockData"; // BarTemplate removed
+import type { AnnouncementBar } from "@/lib/mockData";
 import { Icons } from "@/components/icons";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -40,16 +40,23 @@ interface BarEditorProps {
   expiryTime?: string;
 }
 
+interface CountdownValues {
+  days: number;
+  hours: string;
+  minutes: string;
+  seconds: string;
+}
+
 export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expiryDate, expiryTime }: BarEditorProps) {
   const [previewImageUrl, setPreviewImageUrl] = useState(initialData?.imageUrl || '');
-  const [countdownText, setCountdownText] = useState<string | null>(null);
+  const [countdownValues, setCountdownValues] = useState<CountdownValues | null>(null);
 
   const form = useForm<BarEditorFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: initialData?.title || "",
       message: initialData?.message || "",
-      backgroundColor: initialData?.backgroundColor || "#fc4c1d",
+      backgroundColor: initialData?.backgroundColor || "#333333", // Default dark grey
       textColor: initialData?.textColor || "#ffffff",
       imageUrl: initialData?.imageUrl || "",
     },
@@ -60,7 +67,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
        form.reset({
         title: initialData.title || "",
         message: initialData.message || "",
-        backgroundColor: initialData.backgroundColor || "#fc4c1d",
+        backgroundColor: initialData.backgroundColor || "#333333",
         textColor: initialData.textColor || "#ffffff",
         imageUrl: initialData.imageUrl || "",
       });
@@ -69,7 +76,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
       form.reset({
         title: "",
         message: "",
-        backgroundColor: "#fc4c1d",
+        backgroundColor: "#333333",
         textColor: "#ffffff",
         imageUrl: "",
       });
@@ -113,7 +120,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
             const distance = targetTime - now;
 
             if (distance < 0) {
-                setCountdownText("منقضی شده");
+                setCountdownValues({ days: 0, hours: "00", minutes: "00", seconds: "00" });
                 if (intervalId) clearInterval(intervalId);
                 return;
             }
@@ -122,19 +129,19 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
             const dHours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const dMinutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const dSeconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            let timerStr = "";
-            if (days > 0) timerStr += `${days} روز `;
-            if (dHours > 0 || days > 0) timerStr += `${dHours} ساعت `;
-            timerStr += `${dMinutes} دقیقه ${dSeconds} ثانیه`;
             
-            setCountdownText(timerStr ? `تا انقضا: ${timerStr}` : "درحال محاسبه...");
+            setCountdownValues({
+                days,
+                hours: String(dHours).padStart(2, '0'),
+                minutes: String(dMinutes).padStart(2, '0'),
+                seconds: String(dSeconds).padStart(2, '0'),
+            });
         };
 
         updateCountdown(); 
         intervalId = setInterval(updateCountdown, 1000);
     } else {
-        setCountdownText(null); 
+        setCountdownValues(null); 
     }
 
     return () => {
@@ -142,6 +149,12 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
     };
   }, [expiryDate, expiryTime]);
 
+  const TimerBox = ({ value, unit }: { value: string | number; unit: string }) => (
+    <div className="bg-primary text-primary-foreground rounded-md p-2 flex flex-col items-center justify-center w-16 h-16 shadow-md">
+      <span className="text-2xl font-bold">{String(value).padStart(2, '0')}</span>
+      <span className="text-xs">{unit}</span>
+    </div>
+  );
 
   return (
     <div className="grid md:grid-cols-2 gap-8">
@@ -184,7 +197,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                   <FormControl>
                     <div className="flex items-center gap-2">
                        <Input type="color" {...field} className="p-0 h-10 w-12 cursor-pointer appearance-none border-none bg-transparent" style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}/>
-                       <Input dir="ltr" type="text" placeholder="#fc4c1d" {...field} />
+                       <Input dir="ltr" type="text" placeholder="#333333" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -240,34 +253,42 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">پیش‌نمایش زنده</h3>
         <div 
-          className="p-4 rounded-md shadow-md text-center flex flex-col items-center justify-center gap-2" // Updated for flex-col
+          className="p-3 rounded-lg shadow-xl w-full flex items-center justify-between gap-4"
           style={{ 
-            backgroundColor: watchedBgColor || '#cccccc', 
-            color: watchedTextColor || '#000000',
-            minHeight: '80px', // Increased minHeight to accommodate timer
+            backgroundColor: watchedBgColor || '#333333', 
+            color: watchedTextColor || '#ffffff',
+            minHeight: '80px',
           }}
         >
-          <div className="flex items-center justify-center gap-4">
+          {/* Message Content (Image + Text) - Order reversed for RTL-like display in LTR preview */}
+          <div className="flex items-center gap-2 flex-grow justify-center text-center">
             {previewImageUrl && form.getValues("imageUrl") && ( 
               <Image 
                 src={previewImageUrl} 
                 alt="پیش‌نمایش" 
-                width={40} height={40} 
+                width={32} height={32} // Adjusted size
                 className="rounded-sm object-contain" 
                 data-ai-hint="icon logo"
                 onError={() => { /* console.error("Error loading preview image") */ }}
               />
             )}
-            <span>{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
+            <span className="text-sm">{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
           </div>
-          {countdownText && (
-            <div className="text-xs mt-1" style={{ color: watchedTextColor, opacity: 0.85 }}>
-              {countdownText}
+
+          {/* Countdown Timer */}
+          {countdownValues && (
+            <div className="flex gap-1.5 items-center shrink-0" dir="ltr">
+              {countdownValues.days > 0 && (
+                <TimerBox value={countdownValues.days} unit="روز" />
+              )}
+              <TimerBox value={countdownValues.hours} unit="ساعت" />
+              <TimerBox value={countdownValues.minutes} unit="دقیقه" />
+              <TimerBox value={countdownValues.seconds} unit="ثانیه" />
             </div>
           )}
         </div>
         <p className="text-sm text-muted-foreground">
-          توجه: این یک پیش‌نمایش ساده است. ظاهر واقعی ممکن است بر اساس CSS سایت شما متفاوت باشد.
+          توجه: این یک پیش‌نمایش ساده است. ظاهر واقعی ممکن است بر اساس CSS سایت شما متفاوت باشد. رنگ تایمر از رنگ اصلی برنامه گرفته شده است.
         </p>
       </div>
     </div>

@@ -27,6 +27,12 @@ export async function GET(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (new URL(request.url)).origin;
 
+    // Get primary color from CSS variables (approximation for script)
+    // This is a simplification. In a real scenario, this might be part of bar config.
+    const primaryColorForTimer = 'hsl(13, 97%, 55%)'; // Fallback to default primary
+    const primaryForegroundColorForTimer = '#ffffff';
+
+
     const clientScript = `
 (function() {
   if (document.getElementById('zoombar-lite-container-${barId}')) {
@@ -35,13 +41,13 @@ export async function GET(request: NextRequest) {
 
   var barContainer = document.createElement('div');
   barContainer.id = 'zoombar-lite-container-${barId}';
-  var timerInterval; // Variable for countdown interval
+  var timerInterval; 
 
   function removeBar() {
     if (timerInterval) clearInterval(timerInterval);
     var barElement = document.querySelector('[data-zoombar-id="${barId}"]');
     if (barElement) {
-        barElement.style.transform = 'translateY(-100%)';
+        barElement.style.transform = 'translateY(-150%)'; // Increased to ensure it's off-screen
         var currentBodyPaddingTop = parseFloat(document.body.style.paddingTop) || 0;
         var barHeight = barElement.offsetHeight;
         document.body.style.paddingTop = Math.max(0, currentBodyPaddingTop - barHeight) + 'px';
@@ -50,7 +56,7 @@ export async function GET(request: NextRequest) {
       if (barContainer.parentNode) {
         barContainer.parentNode.removeChild(barContainer);
       }
-    }, 300); // Match transition duration
+    }, 300); 
   }
 
   fetch('${baseUrl}/api/get-announcement-bar?barId=${barId}&userId=${userId}')
@@ -62,22 +68,20 @@ export async function GET(request: NextRequest) {
     })
     .then(function(data) {
       if (data && data.message) {
-        // Check for expiration
         if (data.expiresAt) {
           var expirationDate = new Date(data.expiresAt);
           if (expirationDate.getTime() <= Date.now()) {
             console.log('ZoomBar Lite: Bar ID ${barId} has expired.');
-            return; // Do not display expired bar
+            return; 
           }
         }
 
         var bar = document.createElement('div');
         bar.setAttribute('data-zoombar-id', '${barId}');
         var barStyles = {
-          backgroundColor: data.backgroundColor || '#f0f0f0',
-          color: data.textColor || '#333333',
-          textAlign: 'center',
-          padding: '12px 15px',
+          backgroundColor: data.backgroundColor || '#333333',
+          color: data.textColor || '#ffffff',
+          padding: '10px 15px', // Adjusted padding
           position: 'fixed',
           top: '0',
           left: '0',
@@ -87,52 +91,98 @@ export async function GET(request: NextRequest) {
           fontSize: '14px',
           lineHeight: '1.5',
           fontFamily: 'sans-serif',
-          boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)', // Slightly increased shadow
           transition: 'transform 0.3s ease-out',
-          transform: 'translateY(-100%)'
+          transform: 'translateY(-150%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between', // For timer and message separation
+          gap: '15px',
         };
         for (var styleKey in barStyles) {
           bar.style[styleKey] = barStyles[styleKey];
         }
         
-        var contentWrapper = document.createElement('div');
-        contentWrapper.style.display = 'flex';
-        contentWrapper.style.alignItems = 'center';
-        contentWrapper.style.justifyContent = 'center';
-        contentWrapper.style.gap = '10px';
-        contentWrapper.style.maxWidth = '1200px';
-        contentWrapper.style.margin = '0 auto';
-        contentWrapper.style.position = 'relative'; // For timer positioning
+        var isRTL = document.documentElement.dir === 'rtl';
+
+        // Message Content (Image + Text)
+        var messageWrapper = document.createElement('div');
+        messageWrapper.style.display = 'flex';
+        messageWrapper.style.alignItems = 'center';
+        messageWrapper.style.gap = '10px';
+        messageWrapper.style.flexGrow = '1';
+        messageWrapper.style.justifyContent = isRTL ? 'flex-end' : 'flex-start'; // Text on left for LTR, right for RTL
+
 
         if (data.imageUrl) {
           var img = document.createElement('img');
-          var imgStyles = { height: '24px', width: 'auto', maxHeight: '24px', verticalAlign: 'middle', borderRadius: '3px' };
+          var imgStyles = { height: '32px', width: 'auto', maxHeight: '32px', verticalAlign: 'middle', borderRadius: '4px' };
           for (var imgStyleKey in imgStyles) { img.style[imgStyleKey] = imgStyles[imgStyleKey]; }
           img.src = data.imageUrl;
           img.alt = 'Notification Image';
-          contentWrapper.appendChild(img);
+          messageWrapper.appendChild(img);
         }
         
         var textNode = document.createElement('span');
         textNode.textContent = data.message;
-        contentWrapper.appendChild(textNode);
+        textNode.style.fontSize = '0.95em';
+        messageWrapper.appendChild(textNode);
 
         // Countdown Timer Logic
-        if (data.expiresAt) {
-          var timerSpan = document.createElement('span');
-          var timerStyles = {
-            fontSize: '0.9em',
-            marginLeft: '15px', // RTL: marginRight
-            opacity: '0.85'
+        var timerContainer = document.createElement('div');
+        timerContainer.style.display = 'flex';
+        timerContainer.style.gap = '5px'; // Gap between timer boxes
+        timerContainer.style.alignItems = 'center';
+        timerContainer.style.direction = 'ltr'; // Timer boxes are always LTR visually
+
+        var timerBoxes = {
+          days: { el: null, unit: "روز" },
+          hours: { el: null, unit: "ساعت" },
+          minutes: { el: null, unit: "دقیقه" },
+          seconds: { el: null, unit: "ثانیه" }
+        };
+
+        function createTimerBox(unitText) {
+          var box = document.createElement('div');
+          var boxStyles = {
+            backgroundColor: '${primaryColorForTimer}',
+            color: '${primaryForegroundColorForTimer}',
+            padding: '5px 8px',
+            borderRadius: '4px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: '45px', // min width for boxes
+            textAlign: 'center',
+            lineHeight: '1.2',
           };
-           if (document.documentElement.dir === 'rtl') {
-              timerStyles.marginLeft = '0';
-              timerStyles.marginRight = '15px';
-           }
-          for (var timerStyleKey in timerStyles) {
-            timerSpan.style[timerStyleKey] = timerStyles[timerStyleKey];
-          }
-          contentWrapper.appendChild(timerSpan);
+          for (var sKey in boxStyles) { box.style[sKey] = boxStyles[sKey]; }
+          
+          var valueSpan = document.createElement('span');
+          valueSpan.style.fontSize = '1.1em';
+          valueSpan.style.fontWeight = 'bold';
+          box.appendChild(valueSpan);
+          
+          var unitSpan = document.createElement('span');
+          unitSpan.style.fontSize = '0.7em';
+          unitSpan.textContent = unitText;
+          box.appendChild(unitSpan);
+          
+          return { container: box, valueEl: valueSpan };
+        }
+        
+        if (data.expiresAt) {
+          timerBoxes.days.el = createTimerBox(timerBoxes.days.unit);
+          timerBoxes.hours.el = createTimerBox(timerBoxes.hours.unit);
+          timerBoxes.minutes.el = createTimerBox(timerBoxes.minutes.unit);
+          timerBoxes.seconds.el = createTimerBox(timerBoxes.seconds.unit);
+
+          // Append in visual order (seconds, minutes, hours, days for LTR timer display)
+          timerContainer.appendChild(timerBoxes.seconds.el.container);
+          timerContainer.appendChild(timerBoxes.minutes.el.container);
+          timerContainer.appendChild(timerBoxes.hours.el.container);
+          // Days box will be prepended if needed in updateTimer
 
           function updateTimer() {
             var now = new Date().getTime();
@@ -140,44 +190,71 @@ export async function GET(request: NextRequest) {
 
             if (distance < 0) {
               clearInterval(timerInterval);
-              timerSpan.textContent = "منقضی شده";
+              // Optionally hide or update timer text to "Expired"
+              Object.values(timerBoxes).forEach(tb => {
+                if (tb.el) tb.el.valueEl.textContent = "00";
+              });
               removeBar();
               return;
             }
 
-            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            var d = Math.floor(distance / (1000 * 60 * 60 * 24));
+            var h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var s = Math.floor((distance % (1000 * 60)) / 1000);
             
-            var timerText = "زمان باقی‌مانده: ";
-            if (days > 0) timerText += days + " روز ";
-            if (hours > 0 || days > 0) timerText += hours + " ساعت ";
-            timerText += minutes + " دقیقه " + seconds + " ثانیه";
-            timerSpan.textContent = timerText;
+            timerBoxes.seconds.el.valueEl.textContent = String(s).padStart(2, '0');
+            timerBoxes.minutes.el.valueEl.textContent = String(m).padStart(2, '0');
+            timerBoxes.hours.el.valueEl.textContent = String(h).padStart(2, '0');
+            
+            if (d > 0) {
+              timerBoxes.days.el.valueEl.textContent = String(d).padStart(2, '0');
+              if (!timerBoxes.days.el.container.parentNode) {
+                timerContainer.insertBefore(timerBoxes.days.el.container, timerBoxes.hours.el.container.nextSibling); // insertAfter hours
+              }
+            } else {
+              if (timerBoxes.days.el.container.parentNode) {
+                timerContainer.removeChild(timerBoxes.days.el.container);
+              }
+            }
           }
-          updateTimer(); // Initial call
+          updateTimer(); 
           timerInterval = setInterval(updateTimer, 1000);
         }
         
         var closeButton = document.createElement('button');
         var closeBtnStyles = {
-            background: 'transparent', border: 'none', color: data.textColor || '#333333',
-            fontSize: '18px', cursor: 'pointer', padding: '0 5px',
-            position: 'absolute', top: '50%', transform: 'translateY(-50%)'
+            background: 'transparent', border: 'none', 
+            color: data.textColor || '#ffffff', // Use bar's text color for close button
+            fontSize: '20px', cursor: 'pointer', padding: '0 5px',
+            lineHeight: '1', // Ensure consistent vertical alignment
+            opacity: '0.7',
+            // position: 'absolute', top: '50%', transform: 'translateY(-50%)'
+            // No longer absolute, will be part of flex layout
         };
         if (document.documentElement.dir === 'rtl') {
-            closeBtnStyles.left = '15px';
+            // closeBtnStyles.left = '10px';
         } else {
-            closeBtnStyles.right = '15px';
+            // closeBtnStyles.right = '10px';
         }
-        for (var btnStyleKey in closeBtnStyles) { closeButton.style[btnStyleKey] = closeBtnStyles[btnStyleKey]; }
+         for (var btnStyleKey in closeBtnStyles) { closeButton.style[btnStyleKey] = closeBtnStyles[btnStyleKey]; }
+        closeButton.onmouseover = function() { this.style.opacity = '1'; };
+        closeButton.onmouseout = function() { this.style.opacity = '0.7'; };
         closeButton.innerHTML = '&times;';
         closeButton.setAttribute('aria-label', 'بستن اعلان');
         closeButton.onclick = removeBar;
         
-        bar.appendChild(contentWrapper);
-        bar.appendChild(closeButton); // Close button is child of bar, not contentWrapper for absolute pos
+        // Assemble the bar
+        if (isRTL) {
+            if (data.expiresAt) bar.appendChild(timerContainer);
+            bar.appendChild(messageWrapper);
+            bar.appendChild(closeButton);
+        } else {
+            bar.appendChild(closeButton);
+            bar.appendChild(messageWrapper);
+            if (data.expiresAt) bar.appendChild(timerContainer);
+        }
+        
         barContainer.appendChild(bar);
         
         var injectBar = function() {
