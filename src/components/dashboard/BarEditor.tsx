@@ -33,14 +33,16 @@ type BarEditorFormValues = z.infer<typeof formSchema>;
 
 interface BarEditorProps {
   initialData?: Partial<AnnouncementBar>;
-  // template?: BarTemplate; removed
   onSubmit: (data: BarEditorFormValues) => Promise<void>;
   onCancel?: () => void;
   isSubmitting: boolean;
+  expiryDate?: Date;
+  expiryTime?: string;
 }
 
-export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting }: BarEditorProps) {
+export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expiryDate, expiryTime }: BarEditorProps) {
   const [previewImageUrl, setPreviewImageUrl] = useState(initialData?.imageUrl || '');
+  const [countdownText, setCountdownText] = useState<string | null>(null);
 
   const form = useForm<BarEditorFormValues>({
     resolver: zodResolver(formSchema),
@@ -64,7 +66,6 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting }: Bar
       });
       setPreviewImageUrl(initialData.imageUrl || '');
     } else {
-      // Reset to defaults for a brand new bar if initialData is undefined (e.g., on create page)
       form.reset({
         title: "",
         message: "",
@@ -78,12 +79,68 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting }: Bar
   
   const watchedMessage = form.watch("message");
   const watchedImageUrl = form.watch("imageUrl");
+  const watchedBgColor = form.watch("backgroundColor");
+  const watchedTextColor = form.watch("textColor");
 
   useEffect(() => {
     if (watchedImageUrl !== previewImageUrl) {
         setPreviewImageUrl(watchedImageUrl);
     }
   }, [watchedImageUrl, previewImageUrl]);
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    if (expiryDate) {
+        const updateCountdown = () => {
+            const now = new Date().getTime();
+            let targetTime: number;
+
+            const datePart = new Date(expiryDate);
+            let hours = 0;
+            let minutes = 0;
+
+            if (expiryTime) {
+                const timeParts = expiryTime.split(':');
+                if (timeParts.length === 2) {
+                    hours = parseInt(timeParts[0], 10);
+                    minutes = parseInt(timeParts[1], 10);
+                }
+            }
+            
+            targetTime = new Date(datePart.getFullYear(), datePart.getMonth(), datePart.getDate(), hours, minutes, 0, 0).getTime();
+            
+            const distance = targetTime - now;
+
+            if (distance < 0) {
+                setCountdownText("منقضی شده");
+                if (intervalId) clearInterval(intervalId);
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const dHours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const dMinutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const dSeconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            let timerStr = "";
+            if (days > 0) timerStr += `${days} روز `;
+            if (dHours > 0 || days > 0) timerStr += `${dHours} ساعت `;
+            timerStr += `${dMinutes} دقیقه ${dSeconds} ثانیه`;
+            
+            setCountdownText(timerStr ? `تا انقضا: ${timerStr}` : "درحال محاسبه...");
+        };
+
+        updateCountdown(); 
+        intervalId = setInterval(updateCountdown, 1000);
+    } else {
+        setCountdownText(null); 
+    }
+
+    return () => {
+        if (intervalId) clearInterval(intervalId);
+    };
+  }, [expiryDate, expiryTime]);
 
 
   return (
@@ -183,24 +240,31 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting }: Bar
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">پیش‌نمایش زنده</h3>
         <div 
-          className="p-4 rounded-md shadow-md text-center flex items-center justify-center gap-4"
+          className="p-4 rounded-md shadow-md text-center flex flex-col items-center justify-center gap-2" // Updated for flex-col
           style={{ 
-            backgroundColor: form.getValues("backgroundColor") || '#cccccc', 
-            color: form.getValues("textColor") || '#000000',
-            minHeight: '60px',
+            backgroundColor: watchedBgColor || '#cccccc', 
+            color: watchedTextColor || '#000000',
+            minHeight: '80px', // Increased minHeight to accommodate timer
           }}
         >
-          {previewImageUrl && form.getValues("imageUrl") && ( 
-            <Image 
-              src={previewImageUrl} 
-              alt="پیش‌نمایش" 
-              width={40} height={40} 
-              className="rounded-sm object-contain" 
-              data-ai-hint="icon logo"
-              onError={() => { /* console.error("Error loading preview image") */ }}
-            />
+          <div className="flex items-center justify-center gap-4">
+            {previewImageUrl && form.getValues("imageUrl") && ( 
+              <Image 
+                src={previewImageUrl} 
+                alt="پیش‌نمایش" 
+                width={40} height={40} 
+                className="rounded-sm object-contain" 
+                data-ai-hint="icon logo"
+                onError={() => { /* console.error("Error loading preview image") */ }}
+              />
+            )}
+            <span>{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
+          </div>
+          {countdownText && (
+            <div className="text-xs mt-1" style={{ color: watchedTextColor, opacity: 0.85 }}>
+              {countdownText}
+            </div>
           )}
-          <span>{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
         </div>
         <p className="text-sm text-muted-foreground">
           توجه: این یک پیش‌نمایش ساده است. ظاهر واقعی ممکن است بر اساس CSS سایت شما متفاوت باشد.

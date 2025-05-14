@@ -138,6 +138,8 @@ export default function CreateBarPage() {
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isSubmitting}
+          expiryDate={expiryDate}
+          expiryTime={expiryTime}
         />
       </CardContent>
     </Card>
