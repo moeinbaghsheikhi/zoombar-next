@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
 import Link from 'next/link';
-import Image from 'next/image';
+// Image component is removed as template preview images are gone
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -71,23 +71,7 @@ export default function DashboardPage() {
         </Card>
       </div>
       
-      <Card className="shadow-sm hover:shadow-md transition-shadow">
-        <CardHeader>
-            <CardTitle>با قالب‌ها شروع کنید</CardTitle>
-            <CardDescription>قالب‌های از پیش طراحی شده ما را برای شروع سریع نوارهای اعلانات خود کاوش کنید.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {[1,2,3].map(i => (
-                    <div key={i} className="border rounded-lg p-4 space-y-2 bg-secondary/30">
-                        <Image src={`https://picsum.photos/seed/overview${i}/300/100`} alt={`قالب ${i}`} width={300} height={100} className="rounded" data-ai-hint="abstract design" />
-                        <h3 className="font-semibold">قالب {i}</h3>
-                        <Button size="sm" asChild><Link href="/dashboard/create">استفاده از قالب</Link></Button>
-                    </div>
-                ))}
-            </div>
-        </CardContent>
-      </Card>
+      {/* "Start with templates" section removed */}
 
     </div>
   );

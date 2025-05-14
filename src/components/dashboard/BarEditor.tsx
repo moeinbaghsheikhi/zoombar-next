@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { AnnouncementBar, BarTemplate } from "@/lib/mockData";
+import type { AnnouncementBar } from "@/lib/mockData"; // BarTemplate removed
 import { Icons } from "@/components/icons";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -33,37 +33,28 @@ type BarEditorFormValues = z.infer<typeof formSchema>;
 
 interface BarEditorProps {
   initialData?: Partial<AnnouncementBar>;
-  template?: BarTemplate; 
+  // template?: BarTemplate; removed
   onSubmit: (data: BarEditorFormValues) => Promise<void>;
   onCancel?: () => void;
   isSubmitting: boolean;
 }
 
-export function BarEditor({ initialData, template, onSubmit, onCancel, isSubmitting }: BarEditorProps) {
-  const [previewImageUrl, setPreviewImageUrl] = useState(initialData?.imageUrl || template?.defaultConfig.imageUrl || '');
+export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting }: BarEditorProps) {
+  const [previewImageUrl, setPreviewImageUrl] = useState(initialData?.imageUrl || '');
 
   const form = useForm<BarEditorFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: initialData?.title || template?.name || "",
-      message: initialData?.message || template?.defaultConfig.message || "",
-      backgroundColor: initialData?.backgroundColor || template?.defaultConfig.backgroundColor || "#fc4c1d",
-      textColor: initialData?.textColor || template?.defaultConfig.textColor || "#ffffff",
-      imageUrl: initialData?.imageUrl || template?.defaultConfig.imageUrl || "",
+      title: initialData?.title || "",
+      message: initialData?.message || "",
+      backgroundColor: initialData?.backgroundColor || "#fc4c1d",
+      textColor: initialData?.textColor || "#ffffff",
+      imageUrl: initialData?.imageUrl || "",
     },
   });
 
   useEffect(() => {
-    if (template) {
-      form.reset({
-        title: template.name,
-        message: template.defaultConfig.message,
-        backgroundColor: template.defaultConfig.backgroundColor,
-        textColor: template.defaultConfig.textColor,
-        imageUrl: template.defaultConfig.imageUrl || "",
-      });
-      setPreviewImageUrl(template.defaultConfig.imageUrl || '');
-    } else if (initialData) {
+    if (initialData) {
        form.reset({
         title: initialData.title || "",
         message: initialData.message || "",
@@ -72,8 +63,18 @@ export function BarEditor({ initialData, template, onSubmit, onCancel, isSubmitt
         imageUrl: initialData.imageUrl || "",
       });
       setPreviewImageUrl(initialData.imageUrl || '');
+    } else {
+      // Reset to defaults for a brand new bar if initialData is undefined (e.g., on create page)
+      form.reset({
+        title: "",
+        message: "",
+        backgroundColor: "#fc4c1d",
+        textColor: "#ffffff",
+        imageUrl: "",
+      });
+      setPreviewImageUrl('');
     }
-  }, [template, initialData, form]);
+  }, [initialData, form]);
   
   const watchedMessage = form.watch("message");
   const watchedImageUrl = form.watch("imageUrl");
@@ -189,7 +190,7 @@ export function BarEditor({ initialData, template, onSubmit, onCancel, isSubmitt
             minHeight: '60px',
           }}
         >
-          {previewImageUrl && form.getValues("imageUrl") && ( // Check form.getValues("imageUrl") to ensure it's not an empty string causing an error
+          {previewImageUrl && form.getValues("imageUrl") && ( 
             <Image 
               src={previewImageUrl} 
               alt="پیش‌نمایش" 

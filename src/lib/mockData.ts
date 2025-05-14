@@ -14,55 +14,7 @@ export interface AnnouncementBar {
   expiresAt?: string; // فیلد جدید برای تاریخ انقضا
 }
 
-export interface BarTemplate {
-  id: string;
-  name: string;
-  previewImageUrl: string;
-  defaultConfig: Omit<AnnouncementBar, 'id' | 'userId' | 'clicks' | 'createdAt' | 'title' | 'expiresAt'>;
-}
-
-export const barTemplates: BarTemplate[] = [
-  {
-    id: 'template1',
-    name: 'بنر فروش',
-    previewImageUrl: 'https://picsum.photos/seed/template1/300/100',
-    defaultConfig: {
-      message: '🎉 فروش ویژه! تا ۵۰٪ تخفیف برای کالاهای منتخب!',
-      backgroundColor: '#fc4c1d', 
-      textColor: '#ffffff',
-    },
-  },
-  {
-    id: 'template2',
-    name: 'ویژگی جدید',
-    previewImageUrl: 'https://picsum.photos/seed/template2/300/100',
-    defaultConfig: {
-      message: '✨ ویژگی جدید و شگفت‌انگیز ما را بررسی کنید!',
-      backgroundColor: '#3B82F6', 
-      textColor: '#ffffff',
-    },
-  },
-  {
-    id: 'template3',
-    name: 'پیشنهاد محدود',
-    previewImageUrl: 'https://picsum.photos/seed/template3/300/100',
-    defaultConfig: {
-      message: '⏳ پیشنهاد با زمان محدود! به زودی تمام می‌شود!',
-      backgroundColor: '#10B981', 
-      textColor: '#ffffff',
-    },
-  },
-  {
-    id: 'template4',
-    name: 'اعلان ساده',
-    previewImageUrl: 'https://picsum.photos/seed/template4/300/100',
-    defaultConfig: {
-      message: 'به وب‌سایت ما خوش آمدید!',
-      backgroundColor: '#F3F4F6', 
-      textColor: '#1F2937', 
-    },
-  },
-];
+// BarTemplate interface and barTemplates array are removed
 
 const USER_BARS_STORAGE_KEY_PREFIX = 'zoombar_user_bars_';
 
