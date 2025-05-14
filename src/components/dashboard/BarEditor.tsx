@@ -21,7 +21,7 @@ import { Icons } from "@/components/icons";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Added Select
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formSchema = z.object({
   title: z.string().min(3, { message: "عنوان باید حداقل ۳ کاراکتر باشد." }),
@@ -84,7 +84,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
       });
       setPreviewImageUrl(initialData.imageUrl || '');
     } else {
-      form.reset({ // Default for new bar
+      form.reset({ 
         title: "",
         message: "",
         backgroundColor: "#333333",
@@ -175,7 +175,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
     } else if (styleType === 'circle') {
         styleClasses = "rounded-full";
     } else if (styleType === 'none') {
-        styleClasses = "p-0 w-auto h-auto shadow-none"; // Minimal styling for none
+        styleClasses = "p-0 w-auto h-auto shadow-none"; 
     }
 
     const effectiveBgColor = styleType === 'none' ? 'transparent' : bgColor;
@@ -193,203 +193,203 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
 
 
   return (
-    <div className="space-y-8">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
-            <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>عنوان نوار (برای ارجاع شما)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="مثال: بنر فروش تابستانه" {...field} />
-                    </FormControl>
-                    <FormDescription>این عنوان به کاربران نمایش داده نمی‌شود.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="message"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>پیام</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="پیام اعلانات خود را وارد کنید" className="min-h-[150px]" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="imageUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL تصویر (اختیاری)</FormLabel>
-                    <FormControl>
-                      <Input dir="ltr" placeholder="https://example.com/image.png" {...field} />
-                    </FormControl>
-                    <FormDescription>لینک به تصویری برای نمایش در نوار.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="backgroundColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>رنگ پس‌زمینه نوار</FormLabel>
-                      <FormControl>
-                        <div className="flex items-center gap-2">
-                          <Input type="color" value={field.value} onChange={field.onChange} className="p-0 h-10 w-12 cursor-pointer appearance-none border-none bg-transparent" style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }} />
-                          <Input dir="ltr" type="text" placeholder="#333333" value={field.value} onChange={field.onChange} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="textColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>رنگ متن نوار</FormLabel>
-                      <FormControl>
-                        <div className="flex items-center gap-2">
-                          <Input type="color" value={field.value} onChange={field.onChange} className="p-0 h-10 w-12 cursor-pointer appearance-none border-none bg-transparent" style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }} />
-                          <Input dir="ltr" type="text" placeholder="#ffffff" value={field.value} onChange={field.onChange} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <h4 className="text-md font-semibold pt-2 border-t">تنظیمات تایمر</h4>
-              <div className="grid grid-cols-2 gap-4">
-                 <FormField
-                  control={form.control}
-                  name="timerBackgroundColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>رنگ پس‌زمینه تایمر</FormLabel>
-                      <FormControl>
-                        <div className="flex items-center gap-2">
-                          <Input type="color" value={field.value} onChange={field.onChange} className="p-0 h-10 w-12 cursor-pointer" />
-                          <Input dir="ltr" type="text" placeholder="#FC4C1D" value={field.value} onChange={field.onChange} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="timerTextColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>رنگ متن تایمر</FormLabel>
-                      <FormControl>
-                        <div className="flex items-center gap-2">
-                          <Input type="color" value={field.value} onChange={field.onChange} className="p-0 h-10 w-12 cursor-pointer" />
-                          <Input dir="ltr" type="text" placeholder="#FFFFFF" value={field.value} onChange={field.onChange} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="timerStyle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>نوع نمایش تایمر</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="یک نوع را انتخاب کنید" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="square">مربعی</SelectItem>
-                        <SelectItem value="circle">دایره‌ای</SelectItem>
-                        <SelectItem value="none">متن تنها (بدون کادر)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-4 pt-8 border-t">
-            <h3 className="text-lg font-semibold text-center">پیش‌نمایش زنده</h3>
-            <div 
-              dir="rtl"
-              className="p-3 rounded-lg shadow-xl w-full flex items-center justify-between gap-4 mx-auto"
-              style={{ 
-                backgroundColor: watchedBgColor || '#333333', 
-                color: watchedTextColor || '#ffffff',
-                minHeight: '80px',
-              }}
-            >
-              {countdownValues && (
-                <div className="flex gap-1.5 items-center shrink-0" dir="ltr">
-                  {countdownValues.days > 0 && (
-                    <TimerBox value={countdownValues.days} unit="روز" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
-                  )}
-                  <TimerBox value={countdownValues.hours} unit="ساعت" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
-                  <TimerBox value={countdownValues.minutes} unit="دقیقه" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
-                  <TimerBox value={countdownValues.seconds} unit="ثانیه" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
-                </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>عنوان نوار (برای ارجاع شما)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="مثال: بنر فروش تابستانه" {...field} />
+                  </FormControl>
+                  <FormDescription>این عنوان به کاربران نمایش داده نمی‌شود.</FormDescription>
+                  <FormMessage />
+                </FormItem>
               )}
-              <div className="flex items-center gap-2 flex-grow justify-start text-right"> 
-                {previewImageUrl && form.getValues("imageUrl") && ( 
-                  <Image 
-                    src={previewImageUrl} 
-                    alt="پیش‌نمایش" 
-                    width={32} height={32} 
-                    className="rounded-sm object-contain" 
-                    data-ai-hint="icon logo"
-                    onError={() => { /* console.error("Error loading preview image") */ }}
-                  />
+            />
+            <FormField
+              control={form.control}
+              name="message"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>پیام</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="پیام اعلانات خود را وارد کنید" className="min-h-[150px]" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL تصویر (اختیاری)</FormLabel>
+                  <FormControl>
+                    <Input dir="ltr" placeholder="https://example.com/image.png" {...field} />
+                  </FormControl>
+                  <FormDescription>لینک به تصویری برای نمایش در نوار.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="backgroundColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>رنگ پس‌زمینه نوار</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center gap-2">
+                        <Input type="color" value={field.value} onChange={field.onChange} className="p-0 h-10 w-12 cursor-pointer appearance-none border-none bg-transparent" style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }} />
+                        <Input dir="ltr" type="text" placeholder="#333333" value={field.value} onChange={field.onChange} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-                <span className="text-sm">{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
-              </div>
+              />
+              <FormField
+                control={form.control}
+                name="textColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>رنگ متن نوار</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center gap-2">
+                        <Input type="color" value={field.value} onChange={field.onChange} className="p-0 h-10 w-12 cursor-pointer appearance-none border-none bg-transparent" style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }} />
+                        <Input dir="ltr" type="text" placeholder="#ffffff" value={field.value} onChange={field.onChange} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <p className="text-sm text-muted-foreground text-center">
-              توجه: این یک پیش‌نمایش ساده است. ظاهر واقعی ممکن است بر اساس CSS سایت شما متفاوت باشد.
-            </p>
+
+            <h4 className="text-md font-semibold pt-2 border-t">تنظیمات تایمر</h4>
+            <div className="grid grid-cols-2 gap-4">
+               <FormField
+                control={form.control}
+                name="timerBackgroundColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>رنگ پس‌زمینه تایمر</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center gap-2">
+                        <Input type="color" value={field.value} onChange={field.onChange} className="p-0 h-10 w-12 cursor-pointer" />
+                        <Input dir="ltr" type="text" placeholder="#FC4C1D" value={field.value} onChange={field.onChange} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="timerTextColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>رنگ متن تایمر</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center gap-2">
+                        <Input type="color" value={field.value} onChange={field.onChange} className="p-0 h-10 w-12 cursor-pointer" />
+                        <Input dir="ltr" type="text" placeholder="#FFFFFF" value={field.value} onChange={field.onChange} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="timerStyle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>نوع نمایش تایمر</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="یک نوع را انتخاب کنید" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="square">مربعی</SelectItem>
+                      <SelectItem value="circle">دایره‌ای</SelectItem>
+                      <SelectItem value="none">متن تنها (بدون کادر)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-          
-          <div className="flex space-x-2 rtl:space-x-reverse justify-end mt-4">
-            {onCancel && (
-              <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-                <Icons.Cancel className="me-2 h-4 w-4" /> انصراف
-              </Button>
+        </div>
+        
+        <div className="space-y-4 pt-8 border-t">
+          <h3 className="text-lg font-semibold text-center">پیش‌نمایش زنده</h3>
+          <div 
+            dir="rtl"
+            className="p-3 rounded-lg shadow-xl w-full flex items-center justify-between gap-4 mx-auto"
+            style={{ 
+              backgroundColor: watchedBgColor || '#333333', 
+              color: watchedTextColor || '#ffffff',
+              minHeight: '80px',
+            }}
+          >
+            <div className="flex items-center gap-2 flex-grow justify-start text-right"> 
+              {previewImageUrl && form.getValues("imageUrl") && ( 
+                <Image 
+                  src={previewImageUrl} 
+                  alt="پیش‌نمایش" 
+                  width={32} height={32} 
+                  className="rounded-sm object-contain" 
+                  data-ai-hint="icon logo"
+                  onError={() => { /* console.error("Error loading preview image") */ }}
+                />
+              )}
+              <span className="text-sm">{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
+            </div>
+            {countdownValues && (
+              <div className="flex gap-1.5 items-center shrink-0" dir="ltr">
+                {countdownValues.days > 0 && (
+                  <TimerBox value={countdownValues.days} unit="روز" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
+                )}
+                <TimerBox value={countdownValues.hours} unit="ساعت" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
+                <TimerBox value={countdownValues.minutes} unit="دقیقه" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
+                <TimerBox value={countdownValues.seconds} unit="ثانیه" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
+              </div>
             )}
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Icons.Spinner className="me-2 h-4 w-4 animate-spin" />}
-              <Icons.Save className="me-2 h-4 w-4" /> {initialData ? 'ذخیره تغییرات' : 'ایجاد نوار'}
-            </Button>
           </div>
-        </form>
-      </Form>
-    </div>
+          <p className="text-sm text-muted-foreground text-center">
+            توجه: این یک پیش‌نمایش ساده است. ظاهر واقعی ممکن است بر اساس CSS سایت شما متفاوت باشد.
+          </p>
+        </div>
+        
+        <div className="flex space-x-2 rtl:space-x-reverse justify-end mt-4">
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+              <Icons.Cancel className="me-2 h-4 w-4" /> انصراف
+            </Button>
+          )}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Icons.Spinner className="me-2 h-4 w-4 animate-spin" />}
+            <Icons.Save className="me-2 h-4 w-4" /> {initialData ? 'ذخیره تغییرات' : 'ایجاد نوار'}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }
+
+    

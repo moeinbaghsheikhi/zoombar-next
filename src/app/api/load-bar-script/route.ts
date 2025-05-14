@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
         timerContainer.style.display = 'flex';
         timerContainer.style.gap = '5px'; 
         timerContainer.style.alignItems = 'center';
-        timerContainer.style.direction = 'ltr';
+        timerContainer.style.direction = 'ltr'; // Keep timer itself LTR for number display
 
         var timerBoxes = {
           days: { el: null, unit: "روز" },
@@ -155,10 +155,12 @@ export async function GET(request: NextRequest) {
 
           if (timerData.timerStyle === 'circle') {
             boxDynamicStyles.borderRadius = '50%';
+            // Ensure circle is actually a circle with equal width/height if minWidth is an issue
+            boxBaseStyles.minWidth = '50px'; // Adjust if needed for circle aspect
+            boxBaseStyles.height = '50px'; // Adjust if needed for circle aspect
           } else if (timerData.timerStyle === 'none') {
-            boxDynamicStyles.padding = '0'; // No padding for text only
-            boxDynamicStyles.minWidth = 'auto'; // Adjust width for text only
-            // For 'none' style, the text color is already set by timerTextColor
+            boxDynamicStyles.padding = '0'; 
+            boxDynamicStyles.minWidth = 'auto'; 
           }
           
           var allStyles = { ...boxBaseStyles, ...boxDynamicStyles };
@@ -182,10 +184,13 @@ export async function GET(request: NextRequest) {
           timerBoxes.hours.el = createTimerBox(timerBoxes.hours.unit, data);
           timerBoxes.minutes.el = createTimerBox(timerBoxes.minutes.unit, data);
           timerBoxes.seconds.el = createTimerBox(timerBoxes.seconds.unit, data);
-
-          timerContainer.appendChild(timerBoxes.seconds.el.container);
-          timerContainer.appendChild(timerBoxes.minutes.el.container);
+          
+          // Order for LTR display of timer units (e.g., D H M S)
+          if (timerBoxes.days.el) timerContainer.appendChild(timerBoxes.days.el.container);
           timerContainer.appendChild(timerBoxes.hours.el.container);
+          timerContainer.appendChild(timerBoxes.minutes.el.container);
+          timerContainer.appendChild(timerBoxes.seconds.el.container);
+
 
           function updateTimer() {
             var now = new Date().getTime();
@@ -211,11 +216,12 @@ export async function GET(request: NextRequest) {
             
             if (d > 0) {
               timerBoxes.days.el.valueEl.textContent = String(d).padStart(2, '0');
-              if (!timerBoxes.days.el.container.parentNode) {
-                timerContainer.insertBefore(timerBoxes.days.el.container, timerBoxes.hours.el.container.nextSibling); 
+              if (!timerBoxes.days.el.container.parentNode) { // Check if days box is already in timer
+                 // Insert days box at the beginning of the timer container
+                 timerContainer.insertBefore(timerBoxes.days.el.container, timerContainer.firstChild);
               }
             } else {
-              if (timerBoxes.days.el.container.parentNode) {
+              if (timerBoxes.days.el && timerBoxes.days.el.container.parentNode) {
                 timerContainer.removeChild(timerBoxes.days.el.container);
               }
             }
@@ -239,14 +245,16 @@ export async function GET(request: NextRequest) {
         closeButton.setAttribute('aria-label', 'بستن اعلان');
         closeButton.onclick = removeBar;
         
+        // Order of elements: Timer (visual left) | Message (visual right) | Close (visual far right for RTL)
+        // For LTR: Close (visual left) | Message (visual middle) | Timer (visual right)
         if (isRTL) {
-            if (data.expiresAt) bar.appendChild(timerContainer);
-            bar.appendChild(messageWrapper);
-            bar.appendChild(closeButton); 
+            bar.appendChild(closeButton); // Appears visually right-most in RTL for space-between
+            bar.appendChild(messageWrapper); // Appears visually middle (or left of close)
+            if (data.expiresAt) bar.appendChild(timerContainer); // Appears visually left-most
         } else { 
-            bar.appendChild(closeButton); 
-            bar.appendChild(messageWrapper); 
-            if (data.expiresAt) bar.appendChild(timerContainer); 
+            bar.appendChild(closeButton); // Appears visually left-most in LTR
+            bar.appendChild(messageWrapper); // Appears visually middle
+            if (data.expiresAt) bar.appendChild(timerContainer); // Appears visually right-most
         }
         
         barContainer.appendChild(bar);
@@ -281,3 +289,5 @@ export async function GET(request: NextRequest) {
     return new NextResponse(errorScript, { status: 500, headers: commonHeaders });
   }
 }
+
+    
