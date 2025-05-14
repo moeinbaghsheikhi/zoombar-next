@@ -20,6 +20,7 @@ import type { AnnouncementBar } from "@/lib/mockData";
 import { Icons } from "@/components/icons";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   title: z.string().min(3, { message: "عنوان باید حداقل ۳ کاراکتر باشد." }),
@@ -157,86 +158,94 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
   );
 
   return (
-    <div className="grid md:grid-cols-2 gap-8">
+    <div className="space-y-8">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>عنوان نوار (برای ارجاع شما)</FormLabel>
-                <FormControl>
-                  <Input placeholder="مثال: بنر فروش تابستانه" {...field} />
-                </FormControl>
-                <FormDescription>این عنوان به کاربران نمایش داده نمی‌شود.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="message"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>پیام</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="پیام اعلانات خود را وارد کنید" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-x-8 gap-y-6">
+          {/* Column 1: Title and Message */}
+          <div className="space-y-6">
             <FormField
               control={form.control}
-              name="backgroundColor"
+              name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>رنگ پس‌زمینه</FormLabel>
+                  <FormLabel>عنوان نوار (برای ارجاع شما)</FormLabel>
                   <FormControl>
-                    <div className="flex items-center gap-2">
-                       <Input type="color" {...field} className="p-0 h-10 w-12 cursor-pointer appearance-none border-none bg-transparent" style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}/>
-                       <Input dir="ltr" type="text" placeholder="#333333" {...field} />
-                    </div>
+                    <Input placeholder="مثال: بنر فروش تابستانه" {...field} />
                   </FormControl>
+                  <FormDescription>این عنوان به کاربران نمایش داده نمی‌شود.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name="textColor"
+              name="message"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>رنگ متن</FormLabel>
+                  <FormLabel>پیام</FormLabel>
                   <FormControl>
-                    <div className="flex items-center gap-2">
-                      <Input type="color" {...field} className="p-0 h-10 w-12 cursor-pointer appearance-none border-none bg-transparent" style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}/>
-                      <Input dir="ltr" type="text" placeholder="#ffffff" {...field} />
-                    </div>
+                    <Textarea placeholder="پیام اعلانات خود را وارد کنید" className="min-h-[150px]" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-          <FormField
-            control={form.control}
-            name="imageUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>URL تصویر (اختیاری)</FormLabel>
-                <FormControl>
-                  <Input dir="ltr" placeholder="https://example.com/image.png" {...field} />
-                </FormControl>
-                 <FormDescription>لینک به تصویری برای نمایش در نوار.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+
+          {/* Column 2: Colors and Image URL */}
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="backgroundColor"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>رنگ پس‌زمینه</FormLabel>
+                    <FormControl>
+                        <div className="flex items-center gap-2">
+                        <Input type="color" value={field.value} onChange={field.onChange} className="p-0 h-10 w-12 cursor-pointer appearance-none border-none bg-transparent" style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}/>
+                        <Input dir="ltr" type="text" placeholder="#333333" value={field.value} onChange={field.onChange} />
+                        </div>
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="textColor"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>رنگ متن</FormLabel>
+                    <FormControl>
+                        <div className="flex items-center gap-2">
+                        <Input type="color" value={field.value} onChange={field.onChange} className="p-0 h-10 w-12 cursor-pointer appearance-none border-none bg-transparent" style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}/>
+                        <Input dir="ltr" type="text" placeholder="#ffffff" value={field.value} onChange={field.onChange} />
+                        </div>
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL تصویر (اختیاری)</FormLabel>
+                  <FormControl>
+                    <Input dir="ltr" placeholder="https://example.com/image.png" {...field} />
+                  </FormControl>
+                  <FormDescription>لینک به تصویری برای نمایش در نوار.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
           
-          <div className="flex space-x-2 rtl:space-x-reverse justify-end">
+          {/* Buttons - Spanning both columns or placed strategically */}
+          <div className="md:col-span-2 flex space-x-2 rtl:space-x-reverse justify-end mt-4">
             {onCancel && (
               <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
                 <Icons.Cancel className="me-2 h-4 w-4" /> انصراف
@@ -250,23 +259,24 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
         </form>
       </Form>
 
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">پیش‌نمایش زنده</h3>
+      {/* Live Preview - Spanning full width below the form */}
+      <div className="space-y-4 mt-8 pt-8 border-t">
+        <h3 className="text-lg font-semibold text-center">پیش‌نمایش زنده</h3>
         <div 
-          className="p-3 rounded-lg shadow-xl w-full flex items-center justify-between gap-4"
+          className="p-3 rounded-lg shadow-xl w-full flex items-center justify-between gap-4 mx-auto"
           style={{ 
             backgroundColor: watchedBgColor || '#333333', 
             color: watchedTextColor || '#ffffff',
             minHeight: '80px',
           }}
         >
-          {/* Message Content (Image + Text) - Order reversed for RTL-like display in LTR preview */}
+          {/* Message Content (Image + Text) */}
           <div className="flex items-center gap-2 flex-grow justify-center text-center">
             {previewImageUrl && form.getValues("imageUrl") && ( 
               <Image 
                 src={previewImageUrl} 
                 alt="پیش‌نمایش" 
-                width={32} height={32} // Adjusted size
+                width={32} height={32} 
                 className="rounded-sm object-contain" 
                 data-ai-hint="icon logo"
                 onError={() => { /* console.error("Error loading preview image") */ }}
@@ -287,10 +297,12 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
             </div>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground text-center">
           توجه: این یک پیش‌نمایش ساده است. ظاهر واقعی ممکن است بر اساس CSS سایت شما متفاوت باشد. رنگ تایمر از رنگ اصلی برنامه گرفته شده است.
         </p>
       </div>
     </div>
   );
 }
+
+    
