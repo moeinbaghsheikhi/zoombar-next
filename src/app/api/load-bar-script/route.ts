@@ -27,16 +27,10 @@ export async function GET(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (new URL(request.url)).origin;
 
-    // Get primary color from CSS variables (approximation for script)
-    // This is a simplification. In a real scenario, this might be part of bar config.
-    const primaryColorForTimer = 'hsl(13, 97%, 55%)'; // Fallback to default primary
-    const primaryForegroundColorForTimer = '#ffffff';
-
-
     const clientScript = `
 (function() {
   if (document.getElementById('zoombar-lite-container-${barId}')) {
-    return; // Bar already loaded or being loaded
+    return; 
   }
 
   var barContainer = document.createElement('div');
@@ -47,7 +41,7 @@ export async function GET(request: NextRequest) {
     if (timerInterval) clearInterval(timerInterval);
     var barElement = document.querySelector('[data-zoombar-id="${barId}"]');
     if (barElement) {
-        barElement.style.transform = 'translateY(-150%)'; // Increased to ensure it's off-screen
+        barElement.style.transform = 'translateY(-150%)'; 
         var currentBodyPaddingTop = parseFloat(document.body.style.paddingTop) || 0;
         var barHeight = barElement.offsetHeight;
         document.body.style.paddingTop = Math.max(0, currentBodyPaddingTop - barHeight) + 'px';
@@ -81,7 +75,7 @@ export async function GET(request: NextRequest) {
         var barStyles = {
           backgroundColor: data.backgroundColor || '#333333',
           color: data.textColor || '#ffffff',
-          padding: '10px 15px', // Adjusted padding
+          padding: '10px 15px', 
           position: 'fixed',
           top: '0',
           left: '0',
@@ -91,12 +85,12 @@ export async function GET(request: NextRequest) {
           fontSize: '14px',
           lineHeight: '1.5',
           fontFamily: 'sans-serif',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)', // Slightly increased shadow
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)', 
           transition: 'transform 0.3s ease-out',
           transform: 'translateY(-150%)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between', // For timer and message separation
+          justifyContent: 'space-between', 
           gap: '15px',
         };
         for (var styleKey in barStyles) {
@@ -105,13 +99,12 @@ export async function GET(request: NextRequest) {
         
         var isRTL = document.documentElement.dir === 'rtl';
 
-        // Message Content (Image + Text)
         var messageWrapper = document.createElement('div');
         messageWrapper.style.display = 'flex';
         messageWrapper.style.alignItems = 'center';
         messageWrapper.style.gap = '10px';
         messageWrapper.style.flexGrow = '1';
-        messageWrapper.style.justifyContent = isRTL ? 'flex-start' : 'flex-start'; // Text on right for RTL, left for LTR
+        messageWrapper.style.justifyContent = isRTL ? 'flex-end' : 'flex-start'; 
 
 
         if (data.imageUrl) {
@@ -128,12 +121,11 @@ export async function GET(request: NextRequest) {
         textNode.style.fontSize = '0.95em';
         messageWrapper.appendChild(textNode);
 
-        // Countdown Timer Logic
         var timerContainer = document.createElement('div');
         timerContainer.style.display = 'flex';
-        timerContainer.style.gap = '5px'; // Gap between timer boxes
+        timerContainer.style.gap = '5px'; 
         timerContainer.style.alignItems = 'center';
-        timerContainer.style.direction = 'ltr'; // Timer boxes are always LTR visually
+        timerContainer.style.direction = 'ltr';
 
         var timerBoxes = {
           days: { el: null, unit: "روز" },
@@ -142,22 +134,35 @@ export async function GET(request: NextRequest) {
           seconds: { el: null, unit: "ثانیه" }
         };
 
-        function createTimerBox(unitText) {
+        function createTimerBox(unitText, timerData) {
           var box = document.createElement('div');
-          var boxStyles = {
-            backgroundColor: '${primaryColorForTimer}',
-            color: '${primaryForegroundColorForTimer}',
-            padding: '5px 8px',
-            borderRadius: '4px',
+          var boxBaseStyles = {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            minWidth: '45px', // min width for boxes
+            minWidth: '45px', 
             textAlign: 'center',
             lineHeight: '1.2',
+            padding: '5px 8px', // Default padding
           };
-          for (var sKey in boxStyles) { box.style[sKey] = boxStyles[sKey]; }
+          
+          var boxDynamicStyles = {
+            backgroundColor: timerData.timerStyle === 'none' ? 'transparent' : (timerData.timerBackgroundColor || '#FC4C1D'),
+            color: timerData.timerTextColor || '#FFFFFF',
+            borderRadius: '4px', // Default for square
+          };
+
+          if (timerData.timerStyle === 'circle') {
+            boxDynamicStyles.borderRadius = '50%';
+          } else if (timerData.timerStyle === 'none') {
+            boxDynamicStyles.padding = '0'; // No padding for text only
+            boxDynamicStyles.minWidth = 'auto'; // Adjust width for text only
+            // For 'none' style, the text color is already set by timerTextColor
+          }
+          
+          var allStyles = { ...boxBaseStyles, ...boxDynamicStyles };
+          for (var sKey in allStyles) { box.style[sKey] = allStyles[sKey]; }
           
           var valueSpan = document.createElement('span');
           valueSpan.style.fontSize = '1.1em';
@@ -173,16 +178,14 @@ export async function GET(request: NextRequest) {
         }
         
         if (data.expiresAt) {
-          timerBoxes.days.el = createTimerBox(timerBoxes.days.unit);
-          timerBoxes.hours.el = createTimerBox(timerBoxes.hours.unit);
-          timerBoxes.minutes.el = createTimerBox(timerBoxes.minutes.unit);
-          timerBoxes.seconds.el = createTimerBox(timerBoxes.seconds.unit);
+          timerBoxes.days.el = createTimerBox(timerBoxes.days.unit, data);
+          timerBoxes.hours.el = createTimerBox(timerBoxes.hours.unit, data);
+          timerBoxes.minutes.el = createTimerBox(timerBoxes.minutes.unit, data);
+          timerBoxes.seconds.el = createTimerBox(timerBoxes.seconds.unit, data);
 
-          // Append in visual order (seconds, minutes, hours, days for LTR timer display)
           timerContainer.appendChild(timerBoxes.seconds.el.container);
           timerContainer.appendChild(timerBoxes.minutes.el.container);
           timerContainer.appendChild(timerBoxes.hours.el.container);
-          // Days box will be prepended if needed in updateTimer
 
           function updateTimer() {
             var now = new Date().getTime();
@@ -190,7 +193,6 @@ export async function GET(request: NextRequest) {
 
             if (distance < 0) {
               clearInterval(timerInterval);
-              // Optionally hide or update timer text to "Expired"
               Object.values(timerBoxes).forEach(tb => {
                 if (tb.el) tb.el.valueEl.textContent = "00";
               });
@@ -210,7 +212,7 @@ export async function GET(request: NextRequest) {
             if (d > 0) {
               timerBoxes.days.el.valueEl.textContent = String(d).padStart(2, '0');
               if (!timerBoxes.days.el.container.parentNode) {
-                timerContainer.insertBefore(timerBoxes.days.el.container, timerBoxes.hours.el.container.nextSibling); // insertAfter hours
+                timerContainer.insertBefore(timerBoxes.days.el.container, timerBoxes.hours.el.container.nextSibling); 
               }
             } else {
               if (timerBoxes.days.el.container.parentNode) {
@@ -225,14 +227,11 @@ export async function GET(request: NextRequest) {
         var closeButton = document.createElement('button');
         var closeBtnStyles = {
             background: 'transparent', border: 'none', 
-            color: data.textColor || '#ffffff', // Use bar's text color for close button
+            color: data.textColor || '#ffffff', 
             fontSize: '20px', cursor: 'pointer', padding: '0 5px',
-            lineHeight: '1', // Ensure consistent vertical alignment
+            lineHeight: '1', 
             opacity: '0.7',
-            // position: 'absolute', top: '50%', transform: 'translateY(-50%)'
-            // No longer absolute, will be part of flex layout
         };
-        // RTL/LTR specific styling for close button position is handled by flex order now
          for (var btnStyleKey in closeBtnStyles) { closeButton.style[btnStyleKey] = closeBtnStyles[btnStyleKey]; }
         closeButton.onmouseover = function() { this.style.opacity = '1'; };
         closeButton.onmouseout = function() { this.style.opacity = '0.7'; };
@@ -240,15 +239,14 @@ export async function GET(request: NextRequest) {
         closeButton.setAttribute('aria-label', 'بستن اعلان');
         closeButton.onclick = removeBar;
         
-        // Assemble the bar
         if (isRTL) {
-            bar.appendChild(messageWrapper); // Message first (visual right)
-            if (data.expiresAt) bar.appendChild(timerContainer); // Timer second (visual middle/left)
-            bar.appendChild(closeButton); // Close button last (visual far left)
-        } else { // LTR
-            bar.appendChild(closeButton); // Close button first (visual left)
-            bar.appendChild(messageWrapper); // Message second (visual middle/right)
-            if (data.expiresAt) bar.appendChild(timerContainer); // Timer last (visual far right)
+            if (data.expiresAt) bar.appendChild(timerContainer);
+            bar.appendChild(messageWrapper);
+            bar.appendChild(closeButton); 
+        } else { 
+            bar.appendChild(closeButton); 
+            bar.appendChild(messageWrapper); 
+            if (data.expiresAt) bar.appendChild(timerContainer); 
         }
         
         barContainer.appendChild(bar);
@@ -283,6 +281,3 @@ export async function GET(request: NextRequest) {
     return new NextResponse(errorScript, { status: 500, headers: commonHeaders });
   }
 }
-
-
-    

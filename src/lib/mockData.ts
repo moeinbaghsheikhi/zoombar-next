@@ -11,10 +11,11 @@ export interface AnnouncementBar {
   imageUrl?: string;
   clicks: number;
   createdAt: string; 
-  expiresAt?: string; // فیلد جدید برای تاریخ انقضا
+  expiresAt?: string;
+  timerBackgroundColor?: string; // New: Timer box background color
+  timerTextColor?: string;     // New: Timer box text color
+  timerStyle?: 'square' | 'circle' | 'none'; // New: Timer box style
 }
-
-// BarTemplate interface and barTemplates array are removed
 
 const USER_BARS_STORAGE_KEY_PREFIX = 'zoombar_user_bars_';
 
@@ -24,7 +25,12 @@ export const getUserBars = (userId: string): AnnouncementBar[] => {
   const storedBars = localStorage.getItem(key);
   if (storedBars) {
     try {
-      return JSON.parse(storedBars);
+      return JSON.parse(storedBars).map((bar: AnnouncementBar) => ({
+        ...bar,
+        timerBackgroundColor: bar.timerBackgroundColor || '#FC4C1D', // Default primary
+        timerTextColor: bar.timerTextColor || '#FFFFFF',           // Default primary-foreground
+        timerStyle: bar.timerStyle || 'square',                     // Default square
+      }));
     } catch (e) {
       console.error("Error parsing user bars from localStorage", e);
       return [];
@@ -44,11 +50,18 @@ const saveUserBars = (userId: string, bars: AnnouncementBar[]) => {
 };
 
 export const createAnnouncementBar = async (userId: string, barData: Omit<AnnouncementBar, 'id' | 'userId' | 'clicks' | 'createdAt'>): Promise<AnnouncementBar> => {
-  // Simulate async operation
   await new Promise(resolve => setTimeout(resolve, 300));
   const userBars = getUserBars(userId);
   const newBar: AnnouncementBar = {
-    ...barData, // includes expiresAt if provided
+    title: barData.title,
+    message: barData.message,
+    backgroundColor: barData.backgroundColor,
+    textColor: barData.textColor,
+    imageUrl: barData.imageUrl,
+    expiresAt: barData.expiresAt,
+    timerBackgroundColor: barData.timerBackgroundColor || '#FC4C1D',
+    timerTextColor: barData.timerTextColor || '#FFFFFF',
+    timerStyle: barData.timerStyle || 'square',
     id: Date.now().toString(), 
     userId,
     clicks: 0,
@@ -59,20 +72,25 @@ export const createAnnouncementBar = async (userId: string, barData: Omit<Announ
   return newBar;
 };
 
-export const updateAnnouncementBar = async (userId: string, updatedBar: AnnouncementBar): Promise<AnnouncementBar | null> => {
+export const updateAnnouncementBar = async (userId: string, updatedBarData: Partial<AnnouncementBar> & { id: string }): Promise<AnnouncementBar | null> => {
   await new Promise(resolve => setTimeout(resolve, 300));
   let userBars = getUserBars(userId);
-  const barIndex = userBars.findIndex(bar => bar.id === updatedBar.id);
+  const barIndex = userBars.findIndex(bar => bar.id === updatedBarData.id);
   if (barIndex === -1) return null;
 
-  // Ensure expiresAt from the original editingBar is preserved if not explicitly changed
-  userBars[barIndex] = { ...userBars[barIndex], ...updatedBar };
+  userBars[barIndex] = { 
+    ...userBars[barIndex], 
+    ...updatedBarData,
+    // Ensure defaults are applied if somehow missing during update
+    timerBackgroundColor: updatedBarData.timerBackgroundColor || userBars[barIndex].timerBackgroundColor || '#FC4C1D',
+    timerTextColor: updatedBarData.timerTextColor || userBars[barIndex].timerTextColor || '#FFFFFF',
+    timerStyle: updatedBarData.timerStyle || userBars[barIndex].timerStyle || 'square',
+  };
   saveUserBars(userId, userBars);
   return userBars[barIndex];
 };
 
 export const deleteAnnouncementBar = (userId: string, barId: string): boolean => {
-  // This can remain sync for simplicity unless async is strictly needed for simulation
   let userBars = getUserBars(userId);
   const initialLength = userBars.length;
   userBars = userBars.filter(bar => bar.id !== barId);
@@ -84,7 +102,7 @@ export const deleteAnnouncementBar = (userId: string, barId: string): boolean =>
 };
 
 export const recordBarClick = async (userId: string, barId: string): Promise<AnnouncementBar | null> => {
-  await new Promise(resolve => setTimeout(resolve, 100)); // Shorter delay for click
+  await new Promise(resolve => setTimeout(resolve, 100)); 
   let userBars = getUserBars(userId);
   const barIndex = userBars.findIndex(bar => bar.id === barId);
   if (barIndex === -1) return null;

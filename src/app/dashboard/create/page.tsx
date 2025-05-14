@@ -3,7 +3,6 @@
 
 import React, { useState } from 'react';
 import { BarEditor } from '@/components/dashboard/BarEditor';
-// TemplateCard and barTemplates are removed
 import { createAnnouncementBar, type AnnouncementBar } from '@/lib/mockData'; 
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -24,13 +23,10 @@ export default function CreateBarPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
-  const [expiryTime, setExpiryTime] = useState<string>(''); // e.g., "14:30"
-
-  // selectedTemplate, handleSelectTemplate, handleStartFromScratch are removed
-  // showEditor state is removed as editor is always shown
+  const [expiryTime, setExpiryTime] = useState<string>(''); 
 
   const handleCancel = () => {
-    router.push('/dashboard'); // Navigate back to dashboard overview on cancel
+    router.push('/dashboard'); 
   };
 
   const handleSubmit = async (data: {
@@ -39,6 +35,9 @@ export default function CreateBarPage() {
     backgroundColor: string;
     textColor: string;
     imageUrl?: string;
+    timerBackgroundColor: string;
+    timerTextColor: string;
+    timerStyle: 'square' | 'circle' | 'none';
   }) => {
     if (!user) {
       toast({ title: "خطا", description: "برای ایجاد نوار باید وارد شده باشید.", variant: "destructive" });
@@ -49,10 +48,8 @@ export default function CreateBarPage() {
     let expirationDateTime: string | undefined = undefined;
     if (expiryDate) {
         const dateStr = format(expiryDate, "yyyy-MM-dd");
-        const timeStr = expiryTime || "00:00"; // Default to start of day if no time
+        const timeStr = expiryTime || "00:00"; 
         try {
-            // Construct date in local timezone, then get ISO string.
-            // Avoids issues with new Date("YYYY-MM-DDTHH:mm:ss") which can be UTC or local depending on browser.
             const localDate = new Date(expiryDate.getFullYear(), expiryDate.getMonth(), expiryDate.getDate(), parseInt(timeStr.split(':')[0]), parseInt(timeStr.split(':')[1]));
             expirationDateTime = localDate.toISOString();
         } catch (e) {
@@ -64,7 +61,14 @@ export default function CreateBarPage() {
     }
     
     const barPayload: Omit<AnnouncementBar, 'id' | 'userId' | 'clicks' | 'createdAt'> = {
-        ...data,
+        title: data.title,
+        message: data.message,
+        backgroundColor: data.backgroundColor,
+        textColor: data.textColor,
+        imageUrl: data.imageUrl,
+        timerBackgroundColor: data.timerBackgroundColor,
+        timerTextColor: data.timerTextColor,
+        timerStyle: data.timerStyle,
         ...(expirationDateTime && { expiresAt: expirationDateTime }),
     };
 
@@ -88,7 +92,7 @@ export default function CreateBarPage() {
       <CardHeader>
         <CardTitle className="text-2xl">ایجاد نوار اعلانات جدید</CardTitle>
         <CardDescription>
-          نوار اعلانات خود را طراحی کنید و در صورت نیاز تاریخ انقضا تعیین کنید.
+          نوار اعلانات خود را طراحی کنید و در صورت نیاز تاریخ انقضا و تنظیمات تایمر را تعیین کنید.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -113,7 +117,7 @@ export default function CreateBarPage() {
                   onSelect={setExpiryDate}
                   initialFocus
                   dir="rtl"
-                  locale={faIR} // افزودن لوکیل فارسی به تقویم
+                  locale={faIR} 
                 />
               </PopoverContent>
             </Popover>
@@ -126,15 +130,14 @@ export default function CreateBarPage() {
               value={expiryTime} 
               onChange={(e) => setExpiryTime(e.target.value)} 
               className="w-full"
-              disabled={!expiryDate} // Enable time input only if date is selected
-              dir="ltr" // Time input should generally be LTR for consistency
+              disabled={!expiryDate} 
+              dir="ltr" 
             />
              <p className="text-xs text-muted-foreground mt-1">در صورت انتخاب تاریخ، زمان نیز وارد شود.</p>
           </div>
         </div>
 
         <BarEditor
-          // template prop removed
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isSubmitting}
@@ -145,4 +148,3 @@ export default function CreateBarPage() {
     </Card>
   );
 }
-

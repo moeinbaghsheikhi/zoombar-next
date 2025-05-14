@@ -5,12 +5,11 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const commonHeaders = {
-    'Access-Control-Allow-Origin': '*', // Allow all origins
+    'Access-Control-Allow-Origin': '*', 
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  // Handle OPTIONS preflight request for CORS
   if (request.method === 'OPTIONS') {
     return new NextResponse(null, { status: 204, headers: commonHeaders });
   }
@@ -27,18 +26,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // IMPORTANT: getUserBars uses localStorage and will return [] on the server.
-    // This API, as is, can only work correctly if the data source is server-accessible.
-    // For this mock, it will likely always result in "bar not found" when hit by the snippet.
-    const userBars = getUserBars(userId); // This will be empty on server-side for mockData
+    const userBars = getUserBars(userId);
     const bar = userBars.find(b => b.id === barId);
 
     if (!bar) {
-      // For a real app, you'd fetch from a DB here.
-      // Since mockData relies on localStorage, this API is more of a placeholder
-      // for what the script *expects* to receive.
-      // The actual data for the demo will be hardcoded or fetched differently by the script.
-      // Let's log this situation:
       console.warn(`API /get-announcement-bar: Bar not found for userId=${userId}, barId=${barId}. This is expected if using localStorage-based mockData on server.`);
       return NextResponse.json(
         { error: 'نوار اعلانات یافت نشد (احتمالا به دلیل اجرای سمت سرور با mockData)' },
@@ -51,8 +42,10 @@ export async function GET(request: NextRequest) {
       backgroundColor: bar.backgroundColor,
       textColor: bar.textColor,
       imageUrl: bar.imageUrl,
-      expiresAt: bar.expiresAt, // ارسال تاریخ انقضا
-      // We are not returning title, clicks, createdAt to the public snippet
+      expiresAt: bar.expiresAt,
+      timerBackgroundColor: bar.timerBackgroundColor || '#FC4C1D', // Default primary color
+      timerTextColor: bar.timerTextColor || '#FFFFFF',         // Default white text
+      timerStyle: bar.timerStyle || 'square',                   // Default square style
     };
 
     return NextResponse.json(displayData, { headers: commonHeaders });
