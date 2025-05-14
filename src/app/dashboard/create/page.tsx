@@ -51,7 +51,10 @@ export default function CreateBarPage() {
         const dateStr = format(expiryDate, "yyyy-MM-dd");
         const timeStr = expiryTime || "00:00"; // Default to start of day if no time
         try {
-            expirationDateTime = new Date(`${dateStr}T${timeStr}:00`).toISOString();
+            // Construct date in local timezone, then get ISO string.
+            // Avoids issues with new Date("YYYY-MM-DDTHH:mm:ss") which can be UTC or local depending on browser.
+            const localDate = new Date(expiryDate.getFullYear(), expiryDate.getMonth(), expiryDate.getDate(), parseInt(timeStr.split(':')[0]), parseInt(timeStr.split(':')[1]));
+            expirationDateTime = localDate.toISOString();
         } catch (e) {
             console.error("Invalid date/time for expiration:", e);
             toast({ title: "خطای تاریخ", description: "فرمت تاریخ یا زمان انقضا نامعتبر است.", variant: "destructive"});
@@ -110,6 +113,7 @@ export default function CreateBarPage() {
                   onSelect={setExpiryDate}
                   initialFocus
                   dir="rtl"
+                  locale={faIR} // افزودن لوکیل فارسی به تقویم
                 />
               </PopoverContent>
             </Popover>
@@ -123,7 +127,7 @@ export default function CreateBarPage() {
               onChange={(e) => setExpiryTime(e.target.value)} 
               className="w-full"
               disabled={!expiryDate} // Enable time input only if date is selected
-              dir="ltr"
+              dir="ltr" // Time input should generally be LTR for consistency
             />
              <p className="text-xs text-muted-foreground mt-1">در صورت انتخاب تاریخ، زمان نیز وارد شود.</p>
           </div>
@@ -139,3 +143,4 @@ export default function CreateBarPage() {
     </Card>
   );
 }
+
