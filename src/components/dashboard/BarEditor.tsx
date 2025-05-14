@@ -26,11 +26,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const formSchema = z.object({
   title: z.string().min(3, { message: "عنوان باید حداقل ۳ کاراکتر باشد." }),
   message: z.string().min(5, { message: "پیام باید حداقل ۵ کاراکتر باشد." }),
-  backgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, { message: "کد رنگ هگز نامعتبر است (مثال: #RRGGBB)." }),
-  textColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, { message: "کد رنگ هگز نامعتبر است (مثال: #RRGGBB)." }),
+  backgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر است (مثال: #RRGGBB)." }),
+  textColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر است (مثال: #RRGGBB)." }),
   imageUrl: z.string().url({ message: "لطفاً یک URL معتبر وارد کنید." }).optional().or(z.literal('')),
-  timerBackgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, { message: "کد رنگ هگز نامعتبر است." }).default('#FC4C1D'),
-  timerTextColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, { message: "کد رنگ هگز نامعتبر است." }).default('#FFFFFF'),
+  timerBackgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر است." }).default('#FC4C1D'),
+  timerTextColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر است." }).default('#FFFFFF'),
   timerStyle: z.enum(['square', 'circle', 'none'], { errorMap: () => ({ message: "یک نوع معتبر انتخاب کنید."}) }).default('square'),
 });
 
@@ -41,8 +41,8 @@ interface BarEditorProps {
   onSubmit: (data: BarEditorFormValues) => Promise<void>;
   onCancel?: () => void;
   isSubmitting: boolean;
-  expiryDate?: Date;
-  expiryTime?: string;
+  expiryDate?: Date; // Passed from parent for countdown preview
+  expiryTime?: string; // Passed from parent for countdown preview
 }
 
 interface CountdownValues {
@@ -70,32 +70,22 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
     },
   });
 
-  useEffect(() => {
-    if (initialData) {
-       form.reset({
-        title: initialData.title || "",
-        message: initialData.message || "",
-        backgroundColor: initialData.backgroundColor || "#333333",
-        textColor: initialData.textColor || "#ffffff",
-        imageUrl: initialData.imageUrl || "",
-        timerBackgroundColor: initialData.timerBackgroundColor || "#FC4C1D",
-        timerTextColor: initialData.timerTextColor || "#FFFFFF",
-        timerStyle: initialData.timerStyle || "square",
-      });
-      setPreviewImageUrl(initialData.imageUrl || '');
-    } else {
-      form.reset({ 
-        title: "",
-        message: "",
-        backgroundColor: "#333333",
-        textColor: "#FFFFFF",
-        imageUrl: "",
-        timerBackgroundColor: "#FC4C1D",
-        timerTextColor: "#FFFFFF",
-        timerStyle: "square",
-      });
-      setPreviewImageUrl('');
-    }
+ useEffect(() => {
+    // This effect runs when initialData prop changes from the parent (e.g., after AI color extraction)
+    // It will reset the form with the new initialData, including potentially AI-suggested colors.
+    const currentValues = form.getValues();
+    const newDefaults = {
+        title: initialData?.title || currentValues.title || "",
+        message: initialData?.message || currentValues.message || "",
+        backgroundColor: initialData?.backgroundColor || currentValues.backgroundColor || "#333333",
+        textColor: initialData?.textColor || currentValues.textColor || "#ffffff",
+        imageUrl: initialData?.imageUrl || currentValues.imageUrl || "",
+        timerBackgroundColor: initialData?.timerBackgroundColor || currentValues.timerBackgroundColor || "#FC4C1D",
+        timerTextColor: initialData?.timerTextColor || currentValues.timerTextColor || "#FFFFFF",
+        timerStyle: initialData?.timerStyle || currentValues.timerStyle || "square",
+    };
+    form.reset(newDefaults);
+    setPreviewImageUrl(initialData?.imageUrl || currentValues.imageUrl || '');
   }, [initialData, form]);
   
   const watchedMessage = form.watch("message");
@@ -173,20 +163,21 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
     if (styleType === 'square') {
         styleClasses = "rounded-md";
     } else if (styleType === 'circle') {
-        styleClasses = "rounded-full";
+        styleClasses = "rounded-full !w-16 !h-16"; // Ensure circle is circle
     } else if (styleType === 'none') {
-        styleClasses = "p-0 w-auto h-auto shadow-none"; 
+        styleClasses = "p-0 w-auto h-auto shadow-none bg-transparent"; 
     }
 
     const effectiveBgColor = styleType === 'none' ? 'transparent' : bgColor;
+    const effectiveTextColor = styleType === 'none' ? textColor : textColor; // Text color always applies
     
     return (
         <div 
             className={cn(baseClasses, styleClasses)}
-            style={{ backgroundColor: effectiveBgColor, color: textColor }}
+            style={{ backgroundColor: effectiveBgColor, color: effectiveTextColor }}
         >
-            <span className="text-2xl font-bold">{String(value).padStart(2, '0')}</span>
-            <span className="text-xs">{unit}</span>
+            <span className={cn("text-2xl font-bold", styleType === 'none' && "text-base")}>{String(value).padStart(2, '0')}</span>
+            <span className={cn("text-xs", styleType === 'none' && "text-[0.7rem] ms-1")}>{unit}</span>
         </div>
     );
   };
@@ -227,7 +218,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
           </div>
 
           <div className="space-y-6">
-            <FormField
+             <FormField
               control={form.control}
               name="imageUrl"
               render={({ field }) => (
@@ -317,7 +308,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>نوع نمایش تایمر</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                  <Select onValueChange={field.onChange} value={field.value} dir="rtl"> {/* Ensure value is bound */}
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="یک نوع را انتخاب کنید" />
@@ -340,28 +331,16 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
           <h3 className="text-lg font-semibold text-center">پیش‌نمایش زنده</h3>
           <div 
             dir="rtl"
-            className="p-3 rounded-lg shadow-xl w-full flex items-center justify-between gap-4 mx-auto"
+            className="p-3 rounded-lg shadow-xl w-full flex items-center justify-between gap-4 mx-auto overflow-hidden"
             style={{ 
               backgroundColor: watchedBgColor || '#333333', 
               color: watchedTextColor || '#ffffff',
               minHeight: '80px',
             }}
           >
-            <div className="flex items-center gap-2 flex-grow justify-start text-right"> 
-              {previewImageUrl && form.getValues("imageUrl") && ( 
-                <Image 
-                  src={previewImageUrl} 
-                  alt="پیش‌نمایش" 
-                  width={32} height={32} 
-                  className="rounded-sm object-contain" 
-                  data-ai-hint="icon logo"
-                  onError={() => { /* console.error("Error loading preview image") */ }}
-                />
-              )}
-              <span className="text-sm">{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
-            </div>
+            {/* Timer on the left for RTL */}
             {countdownValues && (
-              <div className="flex gap-1.5 items-center shrink-0" dir="ltr">
+              <div className="flex gap-1.5 items-center shrink-0" dir="ltr"> {/* dir ltr for timer numbers */}
                 {countdownValues.days > 0 && (
                   <TimerBox value={countdownValues.days} unit="روز" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
                 )}
@@ -370,13 +349,28 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                 <TimerBox value={countdownValues.seconds} unit="ثانیه" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
               </div>
             )}
+            {/* Message content on the right for RTL */}
+            <div className="flex items-center gap-3 flex-grow justify-start text-right"> 
+              {previewImageUrl && form.getValues("imageUrl") && ( 
+                <Image 
+                  src={previewImageUrl} 
+                  alt="پیش‌نمایش" 
+                  width={32} height={32} 
+                  className="rounded-sm object-contain shrink-0" 
+                  data-ai-hint="icon logo"
+                  onError={() => { /* console.error("Error loading preview image") */ }}
+                />
+              )}
+              <span className="text-sm text-right flex-grow">{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
+            </div>
+            
           </div>
           <p className="text-sm text-muted-foreground text-center">
             توجه: این یک پیش‌نمایش ساده است. ظاهر واقعی ممکن است بر اساس CSS سایت شما متفاوت باشد.
           </p>
         </div>
         
-        <div className="flex space-x-2 rtl:space-x-reverse justify-end mt-4">
+        <div className="flex space-x-2 rtl:space-x-reverse justify-end mt-8"> {/* Increased margin top */}
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
               <Icons.Cancel className="me-2 h-4 w-4" /> انصراف
@@ -384,12 +378,10 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
           )}
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Icons.Spinner className="me-2 h-4 w-4 animate-spin" />}
-            <Icons.Save className="me-2 h-4 w-4" /> {initialData ? 'ذخیره تغییرات' : 'ایجاد نوار'}
+            <Icons.Save className="me-2 h-4 w-4" /> {initialData?.id ? 'ذخیره تغییرات' : 'ایجاد نوار'}
           </Button>
         </div>
       </form>
     </Form>
   );
 }
-
-    
