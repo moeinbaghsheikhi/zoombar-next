@@ -259,20 +259,8 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                 minHeight: '80px',
               }}
             >
-              {/* Countdown Timer - Placed first for RTL to appear on the left */}
-              {countdownValues && (
-                <div className="flex gap-1.5 items-center shrink-0" dir="ltr"> {/* Timer elements are LTR */}
-                  {countdownValues.days > 0 && (
-                    <TimerBox value={countdownValues.days} unit="روز" />
-                  )}
-                  <TimerBox value={countdownValues.hours} unit="ساعت" />
-                  <TimerBox value={countdownValues.minutes} unit="دقیقه" />
-                  <TimerBox value={countdownValues.seconds} unit="ثانیه" />
-                </div>
-              )}
-              
-              {/* Message Content (Image + Text) - Placed after timer for RTL to appear on the right */}
-              <div className="flex items-center gap-2 flex-grow justify-end text-right"> {/* Ensures content within is pushed to the right and text is right-aligned */}
+              {/* Message Content (Image + Text) - Placed first for RTL to appear on the right */}
+              <div className="flex items-center gap-2 flex-grow justify-start text-right"> {/* Ensures content within is pushed to the right and text is right-aligned */}
                 {previewImageUrl && form.getValues("imageUrl") && ( 
                   <Image 
                     src={previewImageUrl} 
@@ -285,6 +273,18 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                 )}
                 <span className="text-sm">{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
               </div>
+
+              {/* Countdown Timer - Placed second for RTL to appear on the left */}
+              {countdownValues && (
+                <div className="flex gap-1.5 items-center shrink-0" dir="ltr"> {/* Timer elements are LTR */}
+                  {countdownValues.days > 0 && (
+                    <TimerBox value={countdownValues.days} unit="روز" />
+                  )}
+                  <TimerBox value={countdownValues.hours} unit="ساعت" />
+                  <TimerBox value={countdownValues.minutes} unit="دقیقه" />
+                  <TimerBox value={countdownValues.seconds} unit="ثانیه" />
+                </div>
+              )}
             </div>
             <p className="text-sm text-muted-foreground text-center">
               توجه: این یک پیش‌نمایش ساده است. ظاهر واقعی ممکن است بر اساس CSS سایت شما متفاوت باشد. رنگ تایمر از رنگ اصلی برنامه گرفته شده است.
@@ -308,6 +308,8 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
     </div>
   );
 }
+    
+
     
 
     

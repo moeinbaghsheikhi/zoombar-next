@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
         messageWrapper.style.alignItems = 'center';
         messageWrapper.style.gap = '10px';
         messageWrapper.style.flexGrow = '1';
-        messageWrapper.style.justifyContent = isRTL ? 'flex-end' : 'flex-start'; // Text on left for LTR, right for RTL
+        messageWrapper.style.justifyContent = isRTL ? 'flex-start' : 'flex-start'; // Text on right for RTL, left for LTR
 
 
         if (data.imageUrl) {
@@ -232,11 +232,7 @@ export async function GET(request: NextRequest) {
             // position: 'absolute', top: '50%', transform: 'translateY(-50%)'
             // No longer absolute, will be part of flex layout
         };
-        if (document.documentElement.dir === 'rtl') {
-            // closeBtnStyles.left = '10px';
-        } else {
-            // closeBtnStyles.right = '10px';
-        }
+        // RTL/LTR specific styling for close button position is handled by flex order now
          for (var btnStyleKey in closeBtnStyles) { closeButton.style[btnStyleKey] = closeBtnStyles[btnStyleKey]; }
         closeButton.onmouseover = function() { this.style.opacity = '1'; };
         closeButton.onmouseout = function() { this.style.opacity = '0.7'; };
@@ -246,13 +242,13 @@ export async function GET(request: NextRequest) {
         
         // Assemble the bar
         if (isRTL) {
-            if (data.expiresAt) bar.appendChild(timerContainer);
-            bar.appendChild(messageWrapper);
-            bar.appendChild(closeButton);
-        } else {
-            bar.appendChild(closeButton);
-            bar.appendChild(messageWrapper);
-            if (data.expiresAt) bar.appendChild(timerContainer);
+            bar.appendChild(messageWrapper); // Message first (visual right)
+            if (data.expiresAt) bar.appendChild(timerContainer); // Timer second (visual middle/left)
+            bar.appendChild(closeButton); // Close button last (visual far left)
+        } else { // LTR
+            bar.appendChild(closeButton); // Close button first (visual left)
+            bar.appendChild(messageWrapper); // Message second (visual middle/right)
+            if (data.expiresAt) bar.appendChild(timerContainer); // Timer last (visual far right)
         }
         
         barContainer.appendChild(bar);
@@ -287,3 +283,6 @@ export async function GET(request: NextRequest) {
     return new NextResponse(errorScript, { status: 500, headers: commonHeaders });
   }
 }
+
+
+    
