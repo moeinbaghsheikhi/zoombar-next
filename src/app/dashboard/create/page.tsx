@@ -85,6 +85,8 @@ export default function CreateBarPage() {
           ...prevConfig,
           backgroundColor: result.backgroundColor,
           textColor: result.textColor,
+          timerBackgroundColor: result.timerBackgroundColor,
+          timerTextColor: result.timerTextColor,
         }));
 
         toast({ title: "موفقیت", description: "رنگ‌ها با موفقیت استخراج و اعمال شدند." });
@@ -202,7 +204,7 @@ export default function CreateBarPage() {
         <div className="space-y-4 mb-8 p-6 border rounded-lg shadow-sm bg-muted/30">
           <h3 className="text-lg font-semibold">استخراج رنگ با هوش مصنوعی</h3>
           <p className="text-sm text-muted-foreground">
-            یک اسکرین‌شات از وب‌سایت خود آپلود کنید تا هوش مصنوعی رنگ‌های مناسب برای پس‌زمینه و متن نوار اعلان شما را پیشنهاد دهد.
+            یک اسکرین‌شات از وب‌سایت خود آپلود کنید تا هوش مصنوعی رنگ‌های مناسب برای پس‌زمینه و متن نوار اعلان و تایمر شما را پیشنهاد دهد.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
             <div>
@@ -241,7 +243,7 @@ export default function CreateBarPage() {
         <Separator className="my-8" />
 
         <BarEditor
-          initialData={barConfig} // Pass the full config, which includes AI suggested colors if any
+          initialData={barConfig} 
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isSubmitting}

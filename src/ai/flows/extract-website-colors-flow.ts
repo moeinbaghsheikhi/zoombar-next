@@ -1,15 +1,16 @@
 
 'use server';
 /**
- * @fileOverview AI flow to extract dominant colors from a website screenshot.
+ * @fileOverview AI flow to extract dominant colors from a website screenshot
+ * and suggest harmonious colors for the announcement bar and its timer.
  *
- * - extractWebsiteColors - Function to get suggested background and text colors.
+ * - extractWebsiteColors - Function to get suggested colors for bar and timer.
  * - ExtractColorsInput - Input type (image data URI).
- * - ExtractColorsOutput - Output type (background and text hex colors).
+ * - ExtractColorsOutput - Output type (background, text, timer background, and timer text hex colors).
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'zod'; // Using zod directly as genkit might not re-export z for schema definition outside its direct API.
+import {z} from 'zod'; 
 
 const ExtractColorsInputSchema = z.object({
   imageDataUri: z.string().describe(
@@ -19,8 +20,10 @@ const ExtractColorsInputSchema = z.object({
 export type ExtractColorsInput = z.infer<typeof ExtractColorsInputSchema>;
 
 const ExtractColorsOutputSchema = z.object({
-  backgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر برای پس‌زمینه." }).describe("رنگ پس‌زمینه غالب پیشنهادی در فرمت هگز #RRGGBB."),
-  textColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر برای متن." }).describe("رنگ متن با کنتراست مناسب پیشنهادی در فرمت هگز #RRGGBB."),
+  backgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر برای پس‌زمینه نوار." }).describe("رنگ پس‌زمینه غالب پیشنهادی برای نوار اعلان در فرمت هگز #RRGGBB."),
+  textColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر برای متن نوار." }).describe("رنگ متن با کنتراست مناسب پیشنهادی برای نوار اعلان در فرمت هگز #RRGGBB."),
+  timerBackgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر برای پس‌زمینه تایمر." }).describe("رنگ پس‌زمینه پیشنهادی برای تایمر که با رنگ نوار هماهنگ باشد، در فرمت هگز #RRGGBB."),
+  timerTextColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر برای متن تایمر." }).describe("رنگ متن با کنتراست مناسب پیشنهادی برای تایمر، در فرمت هگز #RRGGBB."),
 });
 export type ExtractColorsOutput = z.infer<typeof ExtractColorsOutputSchema>;
 
@@ -32,18 +35,24 @@ const extractColorsPrompt = ai.definePrompt({
   name: 'extractWebsiteColorsPrompt',
   input: {schema: ExtractColorsInputSchema},
   output: {schema: ExtractColorsOutputSchema},
-  prompt: `شما یک دستیار متخصص طراحی وب هستید. وظیفه شما تجزیه و تحلیل تصویر ارائه شده از وب‌سایت و پیشنهاد یک طرح رنگی برای نوار اعلان است که با طراحی وب‌سایت هماهنگ باشد.
+  prompt: `شما یک دستیار متخصص طراحی وب هستید. وظیفه شما تجزیه و تحلیل تصویر ارائه شده از وب‌سایت و پیشنهاد یک طرح رنگی کامل برای نوار اعلان و تایمر شمارش معکوس آن است که با طراحی وب‌سایت هماهنگ باشد و خوانایی بالایی داشته باشد.
 
   تصویر را تجزیه و تحلیل کنید: {{media url=imageDataUri}}
 
   زیبایی‌شناسی کلی، الگوهای رنگی رایج و برندینگ قابل مشاهده در اسکرین‌شات را در نظر بگیرید.
 
   لطفاً ارائه دهید:
-  ۱. یک رنگ پس‌زمینه غالب مناسب برای نوار اعلان. این رنگ در حالت ایده‌آل باید رنگی باشد که در محتوای اصلی وب‌سایت یا نواحی هدر/فوتر وجود دارد.
-  ۲. یک رنگ متن که کنتراست بالایی با رنگ پس‌زمینه پیشنهادی داشته باشد تا از خوانایی اطمینان حاصل شود.
+  ۱. رنگ پس‌زمینه غالب مناسب برای نوار اعلان اصلی. این رنگ در حالت ایده‌آل باید از تم اصلی وب‌سایت الهام گرفته شود.
+  ۲. رنگ متنی برای نوار اعلان اصلی که کنتراست بالایی با رنگ پس‌زمینه پیشنهادی نوار داشته باشد تا از خوانایی اطمینان حاصل شود.
+  ۳. رنگ پس‌زمینه برای تایمر شمارش معکوس. این رنگ باید با رنگ پس‌زمینه نوار اعلان هماهنگ باشد، اما می‌تواند متفاوت باشد تا تایمر را برجسته کند (مثلاً یک رنگ تاکیدی از وب‌سایت).
+  ۴. رنگ متنی برای تایمر شمارش معکوس که کنتراست بالایی با رنگ پس‌زمینه پیشنهادی تایمر داشته باشد.
 
-  رنگ‌ها را در فرمت هگزادسیمال #RRGGBB بازگردانید.
-  مثال: اگر وب‌سایت دارای رنگ آبی و سفید زیادی است، ممکن است پس‌زمینه آبی و متن سفید را پیشنهاد دهید.
+  همه رنگ‌ها را در فرمت هگزادسیمال #RRGGBB بازگردانید.
+  مثال: اگر وب‌سایت دارای رنگ آبی و سفید زیادی است و رنگ تاکیدی نارنجی دارد، ممکن است پیشنهاد دهید:
+  - پس‌زمینه نوار: آبی
+  - متن نوار: سفید
+  - پس‌زمینه تایمر: نارنجی
+  - متن تایمر: سفید یا مشکی (بسته به کنتراست با نارنجی)
   `,
 });
 
@@ -58,7 +67,13 @@ const extractWebsiteColorsFlow = ai.defineFlow(
     if (!output) {
       throw new Error("هوش مصنوعی در استخراج رنگ‌ها ناموفق بود.");
     }
-    // The schema validation in definePrompt output will handle regex automatically.
-    return output;
+    // Schema validation in definePrompt output handles regex automatically.
+    // Ensure all four colors are present, even if AI somehow misses one.
+    return {
+        backgroundColor: output.backgroundColor || '#333333',
+        textColor: output.textColor || '#FFFFFF',
+        timerBackgroundColor: output.timerBackgroundColor || '#FC4C1D', // Default primary if not provided
+        timerTextColor: output.timerTextColor || '#FFFFFF', // Default white if not provided
+    };
   }
 );
