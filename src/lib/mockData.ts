@@ -11,13 +11,14 @@ export interface AnnouncementBar {
   imageUrl?: string;
   clicks: number;
   createdAt: string; 
+  expiresAt?: string; // فیلد جدید برای تاریخ انقضا
 }
 
 export interface BarTemplate {
   id: string;
   name: string;
   previewImageUrl: string;
-  defaultConfig: Omit<AnnouncementBar, 'id' | 'userId' | 'clicks' | 'createdAt' | 'title'>;
+  defaultConfig: Omit<AnnouncementBar, 'id' | 'userId' | 'clicks' | 'createdAt' | 'title' | 'expiresAt'>;
 }
 
 export const barTemplates: BarTemplate[] = [
@@ -95,7 +96,7 @@ export const createAnnouncementBar = async (userId: string, barData: Omit<Announ
   await new Promise(resolve => setTimeout(resolve, 300));
   const userBars = getUserBars(userId);
   const newBar: AnnouncementBar = {
-    ...barData,
+    ...barData, // includes expiresAt if provided
     id: Date.now().toString(), 
     userId,
     clicks: 0,
@@ -112,9 +113,10 @@ export const updateAnnouncementBar = async (userId: string, updatedBar: Announce
   const barIndex = userBars.findIndex(bar => bar.id === updatedBar.id);
   if (barIndex === -1) return null;
 
-  userBars[barIndex] = updatedBar;
+  // Ensure expiresAt from the original editingBar is preserved if not explicitly changed
+  userBars[barIndex] = { ...userBars[barIndex], ...updatedBar };
   saveUserBars(userId, userBars);
-  return updatedBar;
+  return userBars[barIndex];
 };
 
 export const deleteAnnouncementBar = (userId: string, barId: string): boolean => {

@@ -6,8 +6,8 @@ import { StatsDisplay } from '@/components/dashboard/StatsDisplay';
 import { BarEditor } from '@/components/dashboard/BarEditor';
 import { getUserBars, updateAnnouncementBar, deleteAnnouncementBar, type AnnouncementBar } from '@/lib/mockData';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast as useAppToast } from '@/hooks/use-toast'; // Renamed to avoid conflict
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useToast as useAppToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // DialogDescription removed as UiCardDescription is used
 import { Icons } from '@/components/icons';
 import {
   AlertDialog,
@@ -20,83 +20,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription as UiCardDescription } from "@/components/ui/card"; // Renamed CardDescription
-import { Textarea } from "@/components/ui/textarea"; // Changed Input to Textarea
-import { Copy } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription as UiCardDescription } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Copy } from 'lucide-react'; // For copy icon
 
 // تابع تولید قطعه کد
 function generateSnippet(barId: string, userId: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:9002');
-  
+  // Ensure NEXT_PUBLIC_BASE_URL is set in your .env.local or environment variables for production
+  // For example: NEXT_PUBLIC_BASE_URL=https://yourdomain.com
+
   return `
 <script>
   (function() {
-    fetch('${baseUrl}/api/get-announcement-bar?barId=${barId}&userId=${userId}')
-      .then(function(response) {
-        if (!response.ok) {
-          throw new Error('پاسخ شبکه موفقیت آمیز نبود.');
-        }
-        return response.json();
-      })
-      .then(function(data) {
-        if (data && data.message) {
-          var bar = document.createElement('div');
-          var barStyles = {
-            backgroundColor: data.backgroundColor || '#f0f0f0',
-            color: data.textColor || '#333333',
-            textAlign: 'center',
-            padding: '12px 15px',
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '100%',
-            zIndex: '9999',
-            boxSizing: 'border-box',
-            fontSize: '14px',
-            lineHeight: '1.5',
-            fontFamily: 'sans-serif' // یک فونت عمومی
-          };
-          for (var styleKey in barStyles) {
-            bar.style[styleKey] = barStyles[styleKey];
-          }
-          
-          var contentWrapper = document.createElement('div');
-          contentWrapper.style.display = 'flex';
-          contentWrapper.style.alignItems = 'center';
-          contentWrapper.style.justifyContent = 'center';
-          contentWrapper.style.gap = '10px'; // فاصله بین تصویر و متن
-
-          if (data.imageUrl) {
-            var img = document.createElement('img');
-            var imgStyles = {
-              height: '24px',
-              width: 'auto',
-              verticalAlign: 'middle'
-            };
-            for (var imgStyleKey in imgStyles) {
-              img.style[imgStyleKey] = imgStyles[imgStyleKey];
-            }
-            img.src = data.imageUrl;
-            img.alt = 'تصویر اعلان';
-            contentWrapper.appendChild(img);
-          }
-          
-          var textNode = document.createTextNode(data.message);
-          contentWrapper.appendChild(textNode);
-          bar.appendChild(contentWrapper);
-          
-          if (document.body) {
-            document.body.insertBefore(bar, document.body.firstChild);
-          } else {
-            window.addEventListener('DOMContentLoaded', function() {
-              document.body.insertBefore(bar, document.body.firstChild);
-            });
-          }
-        }
-      })
-      .catch(function(error) {
-        console.error('زوم‌بار لایت: خطا در دریافت نوار اعلانات:', error);
-      });
+    var zoomBarScript = document.createElement('script');
+    zoomBarScript.src = '${baseUrl}/api/load-bar-script?barId=${barId}&userId=${userId}';
+    zoomBarScript.async = true;
+    document.head.appendChild(zoomBarScript);
   })();
 </script>
   `.trim();
@@ -105,7 +45,7 @@ function generateSnippet(barId: string, userId: string): string {
 
 export default function StatisticsPage() {
   const { user } = useAuth();
-  const { toast } = useAppToast(); // Use renamed hook
+  const { toast } = useAppToast();
   const [bars, setBars] = useState<AnnouncementBar[]>([]);
   const [editingBar, setEditingBar] = useState<AnnouncementBar | null>(null);
   const [deletingBarId, setDeletingBarId] = useState<string | null>(null);
@@ -117,9 +57,12 @@ export default function StatisticsPage() {
   const fetchBars = useCallback(() => {
     if (user) {
       setIsLoadingBars(true);
-      const userBars = getUserBars(user.id);
-      setBars(userBars);
-      setIsLoadingBars(false);
+      // Simulate API call delay
+      setTimeout(() => {
+        const userBarsData = getUserBars(user.id);
+        setBars(userBarsData);
+        setIsLoadingBars(false);
+      }, 500);
     }
   }, [user]);
 
@@ -129,12 +72,14 @@ export default function StatisticsPage() {
 
   const handleEditBar = (bar: AnnouncementBar) => {
     setEditingBar(bar);
-    setSelectedBarForSnippet(null); // Clear snippet when editing
+    setSelectedBarForSnippet(null); 
     setSnippet(null);
   };
 
-  const confirmDeleteBar = () => {
+  const confirmDeleteBar = async () => {
     if (!user || !deletingBarId) return;
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 300));
     const success = deleteAnnouncementBar(user.id, deletingBarId);
     if (success) {
       toast({ title: "موفقیت", description: "نوار اعلانات حذف شد." });
@@ -219,21 +164,21 @@ export default function StatisticsPage() {
               <div>
                 <CardTitle>قطعه کد برای نوار: "{selectedBarForSnippet.title}"</CardTitle>
                 <UiCardDescription className="mt-1">
-                  این کد را کپی کرده و قبل از تگ پایانی <code>&lt;/body&gt;</code> در وب‌سایت خود جای‌گذاری کنید.
+                  این کد را کپی کرده و قبل از تگ پایانی <code>&lt;/body&gt;</code> یا داخل تگ <code>&lt;head&gt;</code> در وب‌سایت خود جای‌گذاری کنید.
                 </UiCardDescription>
               </div>
               <Button onClick={copySnippetToClipboard} variant="outline" size="sm" className="shrink-0">
-                <Copy className="ms-2 h-4 w-4" /> {/* معکوس برای RTL */}
+                <Copy className="me-2 h-4 w-4" /> {/* معکوس برای RTL */}
                 کپی کردن کد
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             <Textarea
-              dir="ltr" // کد همیشه LTR است
+              dir="ltr" 
               readOnly
               value={snippet}
-              className="min-h-[200px] font-mono text-sm bg-muted/50 border rounded-md p-3 focus:ring-primary focus:border-primary"
+              className="min-h-[120px] font-mono text-sm bg-muted/50 border rounded-md p-3 focus:ring-primary focus:border-primary"
               onClick={(e: React.MouseEvent<HTMLTextAreaElement>) => (e.target as HTMLTextAreaElement).select()}
               aria-label="قطعه کد جاسازی"
             />
@@ -265,12 +210,12 @@ export default function StatisticsPage() {
 
       {deletingBarId && (
          <AlertDialog open={!!deletingBarId} onOpenChange={(open) => !open && setDeletingBarId(null)}>
-          <AlertDialogContent>
+          <AlertDialogContent dir="rtl">
             <AlertDialogHeader className="text-start">
               <AlertDialogTitle>تأیید حذف</AlertDialogTitle>
-              <UiCardDescription>
+              <AlertDialogDescription>
                 آیا از حذف این نوار اعلانات مطمئن هستید؟ این عمل قابل بازگشت نیست.
-              </UiCardDescription>
+              </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setDeletingBarId(null)}>انصراف</AlertDialogCancel>
