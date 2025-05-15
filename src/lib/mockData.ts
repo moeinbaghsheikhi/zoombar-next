@@ -16,6 +16,7 @@ export interface AnnouncementBar {
   timerTextColor?: string;    
   timerStyle?: 'square' | 'circle' | 'none';
   timerPosition?: 'left' | 'right';
+  fontSize?: number; // Added for message and CTA font size
   // CTA Button Fields
   ctaText?: string;
   ctaLink?: string;
@@ -37,7 +38,8 @@ export const getUserBars = (userId: string): AnnouncementBar[] => {
         timerBackgroundColor: bar.timerBackgroundColor || '#FC4C1D', 
         timerTextColor: bar.timerTextColor || '#FFFFFF',           
         timerStyle: bar.timerStyle || 'square',                     
-        timerPosition: bar.timerPosition || 'right', // Default to right
+        timerPosition: bar.timerPosition || 'right',
+        fontSize: bar.fontSize || 14, // Default font size
         // CTA Defaults
         ctaText: bar.ctaText !== undefined ? bar.ctaText : "",
         ctaLink: bar.ctaLink !== undefined ? bar.ctaLink : "",
@@ -76,7 +78,8 @@ export const createAnnouncementBar = async (userId: string, barData: Omit<Announ
     timerBackgroundColor: barData.timerBackgroundColor || '#FC4C1D',
     timerTextColor: barData.timerTextColor || '#FFFFFF',
     timerStyle: barData.timerStyle || 'square',
-    timerPosition: barData.timerPosition || 'right', // Default to right
+    timerPosition: barData.timerPosition || 'right',
+    fontSize: barData.fontSize || 14, // Added
     // CTA Fields
     ctaText: barData.ctaText || "",
     ctaLink: barData.ctaLink || "",
@@ -105,7 +108,8 @@ export const updateAnnouncementBar = async (userId: string, updatedBarData: Part
     timerBackgroundColor: updatedBarData.timerBackgroundColor || userBars[barIndex].timerBackgroundColor || '#FC4C1D',
     timerTextColor: updatedBarData.timerTextColor || userBars[barIndex].timerTextColor || '#FFFFFF',
     timerStyle: updatedBarData.timerStyle || userBars[barIndex].timerStyle || 'square',
-    timerPosition: updatedBarData.timerPosition || userBars[barIndex].timerPosition || 'right', // Default to right
+    timerPosition: updatedBarData.timerPosition || userBars[barIndex].timerPosition || 'right',
+    fontSize: updatedBarData.fontSize || userBars[barIndex].fontSize || 14, // Added
     // CTA fields update with defaults if not provided in updatedBarData
     ctaText: updatedBarData.ctaText !== undefined ? updatedBarData.ctaText : userBars[barIndex].ctaText,
     ctaLink: updatedBarData.ctaLink !== undefined ? updatedBarData.ctaLink : userBars[barIndex].ctaLink,

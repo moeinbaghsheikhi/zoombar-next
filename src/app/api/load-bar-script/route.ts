@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
           width: '100%',
           zIndex: '999999',
           boxSizing: 'border-box',
-          fontSize: '14px',
+          // fontSize: '14px', // Base font size for bar removed, will be set on children
           lineHeight: '1.5',
           fontFamily: 'sans-serif',
           boxShadow: '0 2px 8px rgba(0,0,0,0.2)', 
@@ -97,6 +97,7 @@ export async function GET(request: NextRequest) {
           bar.style[styleKey] = barStyles[styleKey];
         }
         
+        var finalFontSize = (data.fontSize || 14) + 'px';
         var isRTL = document.documentElement.dir === 'rtl';
         var timerPosition = data.timerPosition || (isRTL ? 'right' : 'right'); 
 
@@ -119,8 +120,7 @@ export async function GET(request: NextRequest) {
         
         var textNode = document.createElement('span');
         textNode.textContent = data.message;
-        textNode.style.fontSize = '0.95em';
-        // textNode.style.flexGrow = '1'; // Allow text to take available space
+        textNode.style.fontSize = finalFontSize;
         messageWrapper.appendChild(textNode);
 
         // CTA Button
@@ -132,13 +132,12 @@ export async function GET(request: NextRequest) {
             var ctaStyles = {
                 backgroundColor: data.ctaBackgroundColor || '#FC4C1D',
                 color: data.ctaTextColor || '#FFFFFF',
-                padding: '6px 12px', // Adjusted padding
+                padding: '6px 12px',
                 borderRadius: '4px',
                 textDecoration: 'none',
-                fontSize: '0.9em', // Slightly smaller than bar text
-                fontWeight: '500', // Medium weight
-                // marginLeft and marginRight are handled by parent's gap
-                whiteSpace: 'nowrap', // Prevent button text from wrapping
+                fontSize: finalFontSize, 
+                fontWeight: '500', 
+                whiteSpace: 'nowrap',
             };
             for (var ctaStyleKey in ctaStyles) {
                 ctaButton.style[ctaStyleKey] = ctaStyles[ctaStyleKey];
@@ -177,7 +176,7 @@ export async function GET(request: NextRequest) {
             
             var boxDynamicStyles = {
               backgroundColor: timerData.timerStyle === 'none' ? 'transparent' : (timerData.timerBackgroundColor || '#FC4C1D'),
-              color: timerData.timerTextColor || '#FFFFFF',
+              color: timerData.timerStyle === 'none' ? (timerData.textColor || '#ffffff') : (timerData.timerTextColor || '#FFFFFF'), // Adjust text color for 'none' style
               borderRadius: '4px', 
             };
 
@@ -194,12 +193,12 @@ export async function GET(request: NextRequest) {
             for (var sKey in allStyles) { box.style[sKey] = allStyles[sKey]; }
             
             var valueSpan = document.createElement('span');
-            valueSpan.style.fontSize = '1.1em';
+            valueSpan.style.fontSize = '1.1em'; // This could be relative to the bar's overall font if needed
             valueSpan.style.fontWeight = 'bold';
             box.appendChild(valueSpan);
             
             var unitSpan = document.createElement('span');
-            unitSpan.style.fontSize = '0.7em';
+            unitSpan.style.fontSize = '0.7em'; // This could be relative
             unitSpan.textContent = unitText;
             box.appendChild(unitSpan);
             
@@ -278,8 +277,6 @@ export async function GET(request: NextRequest) {
                 if (timerContainer) bar.appendChild(timerContainer);
             }
         } else { 
-            // For LTR, if timer is 'left', it comes before message. If 'right', after message.
-            // Close button is always on the far right for LTR.
             if (timerPosition === 'left') {
                 if (timerContainer) bar.appendChild(timerContainer);
                 bar.appendChild(messageWrapper);
@@ -322,5 +319,3 @@ export async function GET(request: NextRequest) {
     return new NextResponse(errorScript, { status: 500, headers: commonHeaders });
   }
 }
-
-    

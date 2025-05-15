@@ -40,6 +40,7 @@ export default function CreateBarPage() {
     timerTextColor: "#FFFFFF",
     timerStyle: "square",
     timerPosition: "right", 
+    fontSize: 14, // Default font size
     expiresAt: undefined,
     // CTA Defaults
     ctaText: "",
@@ -62,7 +63,6 @@ export default function CreateBarPage() {
         const dateStr = format(expiryDate, "yyyy-MM-dd");
         const timeStr = expiryTime || "00:00"; 
         try {
-            // Ensure expiryDate is treated as local time when combining with expiryTime
             const localDate = new Date(expiryDate.getFullYear(), expiryDate.getMonth(), expiryDate.getDate(), parseInt(timeStr.split(':')[0]), parseInt(timeStr.split(':')[1]));
             expirationDateTime = localDate.toISOString();
         } catch (e) {
@@ -79,16 +79,14 @@ export default function CreateBarPage() {
     const rawValue = e.target.value;
     setDateInputString(rawValue); 
 
-    const value = persianToWesternNumerals(rawValue); // Convert Persian numerals
+    const value = persianToWesternNumerals(rawValue); 
 
     if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(value)) {
       const parts = value.split('/');
       const year = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed in JavaScript Date
+      const month = parseInt(parts[1], 10) - 1; 
       const day = parseInt(parts[2], 10);
       
-      // WARNING: This creates a Gregorian date using the Shamsi year number.
-      // For true Shamsi countdown, a Jalali date library is needed.
       const parsedDate = new Date(year, month, day); 
       
       if (!isNaN(parsedDate.getTime())) {
@@ -161,6 +159,7 @@ export default function CreateBarPage() {
     timerTextColor: string;
     timerStyle: 'square' | 'circle' | 'none';
     timerPosition: 'left' | 'right';
+    fontSize: number;
     ctaText?: string;
     ctaLink?: string;
     ctaBackgroundColor: string;
@@ -183,6 +182,7 @@ export default function CreateBarPage() {
         timerTextColor: data.timerTextColor,
         timerStyle: data.timerStyle,
         timerPosition: data.timerPosition,
+        fontSize: data.fontSize,
         ctaText: data.ctaText,
         ctaLink: data.ctaLink,
         ctaBackgroundColor: data.ctaBackgroundColor,
@@ -300,4 +300,3 @@ export default function CreateBarPage() {
     </Card>
   );
 }
-

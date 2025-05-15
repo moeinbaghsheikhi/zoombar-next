@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
       timerTextColor: bar.timerTextColor || '#FFFFFF',         
       timerStyle: bar.timerStyle || 'square',                   
       timerPosition: bar.timerPosition || 'right',
+      fontSize: bar.fontSize || 14, // Added font size
       // CTA data
       ctaText: bar.ctaText,
       ctaLink: bar.ctaLink,
@@ -65,4 +66,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

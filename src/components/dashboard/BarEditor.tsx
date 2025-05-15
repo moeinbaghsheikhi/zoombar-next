@@ -35,6 +35,7 @@ const formSchema = z.object({
   timerTextColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر است." }).default('#FFFFFF'),
   timerStyle: z.enum(['square', 'circle', 'none'], { errorMap: () => ({ message: "یک نوع معتبر انتخاب کنید."}) }).default('square'),
   timerPosition: z.enum(['left', 'right'], { errorMap: () => ({ message: "یک موقعیت معتبر انتخاب کنید."}) }).default('right'),
+  fontSize: z.number().min(8, {message: "اندازه فونت باید حداقل ۸ باشد."}).max(48, {message: "اندازه فونت باید حداکثر ۴۸ باشد."}).default(14),
   // CTA Fields
   ctaText: z.string().optional().or(z.literal('')),
   ctaLink: z.string().url({ message: "لینک CTA باید یک URL معتبر باشد." }).optional().or(z.literal('')),
@@ -86,7 +87,8 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
       timerBackgroundColor: initialData?.timerBackgroundColor || "#FC4C1D",
       timerTextColor: initialData?.timerTextColor || "#FFFFFF",
       timerStyle: initialData?.timerStyle || "square",
-      timerPosition: initialData?.timerPosition || "right", // Default to right
+      timerPosition: initialData?.timerPosition || "right",
+      fontSize: initialData?.fontSize || 14,
       ctaText: initialData?.ctaText !== undefined ? initialData.ctaText : "",
       ctaLink: initialData?.ctaLink !== undefined ? initialData.ctaLink : "",
       ctaBackgroundColor: initialData?.ctaBackgroundColor || "#FC4C1D",
@@ -109,14 +111,15 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
       timerTextColor: initialData?.timerTextColor || currentValues.timerTextColor || "#FFFFFF",
       ctaBackgroundColor: initialData?.ctaBackgroundColor || currentValues.ctaBackgroundColor || "#FC4C1D",
       ctaTextColor: initialData?.ctaTextColor || currentValues.ctaTextColor || "#FFFFFF",
+      
+      fontSize: currentValues.fontSize || initialData?.fontSize || 14,
 
-      // For select/enum fields, prioritize current form value if valid, then initialData, then hardcoded default
       timerStyle: currentValues.timerStyle && ['square', 'circle', 'none'].includes(currentValues.timerStyle as string)
                     ? currentValues.timerStyle
                     : (initialData?.timerStyle || "square"),
       timerPosition: currentValues.timerPosition && (currentValues.timerPosition === 'left' || currentValues.timerPosition === 'right')
                     ? currentValues.timerPosition
-                    : (initialData?.timerPosition || "right"), // Default to right
+                    : (initialData?.timerPosition || "right"),
       ctaLinkTarget: currentValues.ctaLinkTarget && (currentValues.ctaLinkTarget === '_self' || currentValues.ctaLinkTarget === '_blank')
                     ? currentValues.ctaLinkTarget
                     : (initialData?.ctaLinkTarget || "_self"),
@@ -137,6 +140,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
   const watchedTimerTextColor = form.watch("timerTextColor");
   const watchedTimerStyle = form.watch("timerStyle");
   const watchedTimerPosition = form.watch("timerPosition");
+  const watchedFontSize = form.watch("fontSize");
   const watchedCtaText = form.watch("ctaText");
   const watchedCtaLink = form.watch("ctaLink");
   const watchedCtaBgColor = form.watch("ctaBackgroundColor");
@@ -215,7 +219,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
     }
 
     const effectiveBgColor = styleType === 'none' ? 'transparent' : bgColor;
-    const effectiveTextColor = styleType === 'none' ? watchedTextColor : textColor; // Use watchedTextColor for 'none' to match bar text potentially
+    const effectiveTextColor = styleType === 'none' ? watchedTextColor : textColor; 
 
     return (
         <div
@@ -261,6 +265,58 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="fontSize"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>اندازه فونت پیام و دکمه (پیکسل)</FormLabel>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => form.setValue("fontSize", Math.max(8, (field.value || 14) - 1))}
+                      disabled={isSubmitting || (field.value || 14) <= 8}
+                    >
+                      <Icons.Minus className="h-4 w-4" />
+                    </Button>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={8}
+                        max={48}
+                        {...field}
+                        onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (isNaN(val)) field.onChange(14); // default if NaN
+                            else if (val < 8) field.onChange(8);
+                            else if (val > 48) field.onChange(48);
+                            else field.onChange(val);
+                        }}
+                        value={field.value || 14}
+                        className="w-20 text-center"
+                        dir="ltr"
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => form.setValue("fontSize", Math.min(48, (field.value || 14) + 1))}
+                      disabled={isSubmitting || (field.value || 14) >= 48}
+                    >
+                      <Icons.Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <FormDescription>اندازه فونت برای متن اصلی پیام و متن دکمه فراخوان.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="space-y-6">
              <FormField
               control={form.control}
               name="imageUrl"
@@ -309,11 +365,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                 )}
               />
             </div>
-
-          </div>
-
-          <div className="space-y-6">
-             <Separator />
+            <Separator />
             <h4 className="text-md font-semibold">تنظیمات تایمر</h4>
             <div className="grid grid-cols-2 gap-4">
                <FormField
@@ -488,8 +540,8 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
             />
           </div>
         </div>
-
-        <div className="space-y-4 pt-8"> {/* Removed border-t here, will be added by Separator if needed */}
+        
+        <div className="space-y-4 pt-8">
           <h3 className="text-lg font-semibold text-center">پیش‌نمایش زنده</h3>
           <div
             dir="rtl"
@@ -500,10 +552,9 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
               minHeight: '80px',
             }}
           >
-            {/* Message and CTA content container */}
             <div className={cn(
-                "flex items-center gap-3 flex-grow",
-                watchedTimerPosition === 'right' ? "order-1" : "order-2", 
+                "flex items-center gap-3",
+                watchedTimerPosition === 'right' ? "order-1 flex-grow" : "order-2 flex-grow", 
             )}>
               {previewImageUrl && form.getValues("imageUrl") && (
                 <Image
@@ -512,33 +563,33 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                   width={32} height={32}
                   className="rounded-sm object-contain shrink-0"
                   data-ai-hint="icon logo"
-                  onError={() => {}} // Prevent error for broken images during preview
+                  onError={() => {}} 
                 />
               )}
-              <span className="text-sm text-right">{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
+              <span className="text-right" style={{ fontSize: `${watchedFontSize || 14}px` }}>{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
                {watchedCtaText && watchedCtaLink && (
                 <a
                   href={watchedCtaLink || '#'}
                   target={form.getValues("ctaLinkTarget")}
-                  className="px-3 py-1.5 rounded-md text-xs font-medium shrink-0 whitespace-nowrap"
+                  className="px-3 py-1.5 rounded-md font-medium shrink-0 whitespace-nowrap"
                   style={{
                     backgroundColor: watchedCtaBgColor,
                     color: watchedCtaTextColor,
+                    fontSize: `${watchedFontSize || 14}px`,
                     textDecoration: 'none',
                   }}
-                  onClick={(e) => e.preventDefault()} // Prevent navigation in preview
+                  onClick={(e) => e.preventDefault()} 
                 >
                   {watchedCtaText}
                 </a>
               )}
             </div>
 
-            {/* Timer container */}
             {countdownValues && (
               <div className={cn(
                   "flex gap-1.5 items-center shrink-0",
                    watchedTimerPosition === 'right' ? "order-2" : "order-1" 
-              )} dir="ltr"> {/* Timer elements are LTR */}
+              )} dir="ltr"> 
                 {countdownValues.days > 0 && (
                   <TimerBox value={countdownValues.days} unit="روز" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
                 )}
@@ -552,7 +603,6 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
             توجه: این یک پیش‌نمایش ساده است. ظاهر واقعی ممکن است بر اساس CSS سایت شما متفاوت باشد.
           </p>
         </div>
-         {/* Separator before action buttons */}
         <Separator className="my-6" />
 
         <div className="flex space-x-2 rtl:space-x-reverse justify-end">

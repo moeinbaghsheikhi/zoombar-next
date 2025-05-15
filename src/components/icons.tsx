@@ -1,3 +1,4 @@
+
 import type { SVGProps } from 'react';
 import {
   LayoutDashboard,
@@ -36,7 +37,9 @@ import {
   Bell,        // Added for "Notification"
   FileText,    // Added for "Documents"
   HelpCircle,  // Added for "Help"
-  Star         // Added for "Star Events" logo, as Zap might be too generic
+  Star,         // Added for "Star Events" logo, as Zap might be too generic
+  Minus,       // Added for font size control
+  Plus         // Added for font size control
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -79,6 +82,8 @@ export const Icons = {
   Notification: Bell,
   Documents: FileText,
   Help: HelpCircle,
+  Minus: Minus,
+  Plus: Plus,
 };
 
 export const ZoomBarLogo = ({ className, size = "md", showSubtitle = false }: { className?: string; size?: "sm" | "md" | "lg"; showSubtitle?: boolean }) => {
