@@ -43,9 +43,16 @@ export async function GET(request: NextRequest) {
       textColor: bar.textColor,
       imageUrl: bar.imageUrl,
       expiresAt: bar.expiresAt,
-      timerBackgroundColor: bar.timerBackgroundColor || '#FC4C1D', // Default primary color
-      timerTextColor: bar.timerTextColor || '#FFFFFF',         // Default white text
-      timerStyle: bar.timerStyle || 'square',                   // Default square style
+      timerBackgroundColor: bar.timerBackgroundColor || '#FC4C1D', 
+      timerTextColor: bar.timerTextColor || '#FFFFFF',         
+      timerStyle: bar.timerStyle || 'square',                   
+      timerPosition: bar.timerPosition || 'right',
+      // CTA data
+      ctaText: bar.ctaText,
+      ctaLink: bar.ctaLink,
+      ctaBackgroundColor: bar.ctaBackgroundColor,
+      ctaTextColor: bar.ctaTextColor,
+      ctaLinkTarget: bar.ctaLinkTarget,
     };
 
     return NextResponse.json(displayData, { headers: commonHeaders });
@@ -58,3 +65,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+

@@ -12,9 +12,16 @@ export interface AnnouncementBar {
   clicks: number;
   createdAt: string; 
   expiresAt?: string;
-  timerBackgroundColor?: string; // New: Timer box background color
-  timerTextColor?: string;     // New: Timer box text color
-  timerStyle?: 'square' | 'circle' | 'none'; // New: Timer box style
+  timerBackgroundColor?: string;
+  timerTextColor?: string;    
+  timerStyle?: 'square' | 'circle' | 'none';
+  timerPosition?: 'left' | 'right';
+  // CTA Button Fields
+  ctaText?: string;
+  ctaLink?: string;
+  ctaBackgroundColor?: string;
+  ctaTextColor?: string;
+  ctaLinkTarget?: '_self' | '_blank';
 }
 
 const USER_BARS_STORAGE_KEY_PREFIX = 'zoombar_user_bars_';
@@ -27,9 +34,16 @@ export const getUserBars = (userId: string): AnnouncementBar[] => {
     try {
       return JSON.parse(storedBars).map((bar: AnnouncementBar) => ({
         ...bar,
-        timerBackgroundColor: bar.timerBackgroundColor || '#FC4C1D', // Default primary
-        timerTextColor: bar.timerTextColor || '#FFFFFF',           // Default primary-foreground
-        timerStyle: bar.timerStyle || 'square',                     // Default square
+        timerBackgroundColor: bar.timerBackgroundColor || '#FC4C1D', 
+        timerTextColor: bar.timerTextColor || '#FFFFFF',           
+        timerStyle: bar.timerStyle || 'square',                     
+        timerPosition: bar.timerPosition || 'right', // Default to right
+        // CTA Defaults
+        ctaText: bar.ctaText !== undefined ? bar.ctaText : "",
+        ctaLink: bar.ctaLink !== undefined ? bar.ctaLink : "",
+        ctaBackgroundColor: bar.ctaBackgroundColor || '#FC4C1D', 
+        ctaTextColor: bar.ctaTextColor || '#FFFFFF', 
+        ctaLinkTarget: bar.ctaLinkTarget || '_self',
       }));
     } catch (e) {
       console.error("Error parsing user bars from localStorage", e);
@@ -62,6 +76,13 @@ export const createAnnouncementBar = async (userId: string, barData: Omit<Announ
     timerBackgroundColor: barData.timerBackgroundColor || '#FC4C1D',
     timerTextColor: barData.timerTextColor || '#FFFFFF',
     timerStyle: barData.timerStyle || 'square',
+    timerPosition: barData.timerPosition || 'right', // Default to right
+    // CTA Fields
+    ctaText: barData.ctaText || "",
+    ctaLink: barData.ctaLink || "",
+    ctaBackgroundColor: barData.ctaBackgroundColor || '#FC4C1D',
+    ctaTextColor: barData.ctaTextColor || '#FFFFFF',
+    ctaLinkTarget: barData.ctaLinkTarget || '_self',
     id: Date.now().toString(), 
     userId,
     clicks: 0,
@@ -81,10 +102,16 @@ export const updateAnnouncementBar = async (userId: string, updatedBarData: Part
   userBars[barIndex] = { 
     ...userBars[barIndex], 
     ...updatedBarData,
-    // Ensure defaults are applied if somehow missing during update
     timerBackgroundColor: updatedBarData.timerBackgroundColor || userBars[barIndex].timerBackgroundColor || '#FC4C1D',
     timerTextColor: updatedBarData.timerTextColor || userBars[barIndex].timerTextColor || '#FFFFFF',
     timerStyle: updatedBarData.timerStyle || userBars[barIndex].timerStyle || 'square',
+    timerPosition: updatedBarData.timerPosition || userBars[barIndex].timerPosition || 'right', // Default to right
+    // CTA fields update with defaults if not provided in updatedBarData
+    ctaText: updatedBarData.ctaText !== undefined ? updatedBarData.ctaText : userBars[barIndex].ctaText,
+    ctaLink: updatedBarData.ctaLink !== undefined ? updatedBarData.ctaLink : userBars[barIndex].ctaLink,
+    ctaBackgroundColor: updatedBarData.ctaBackgroundColor || userBars[barIndex].ctaBackgroundColor || '#FC4C1D',
+    ctaTextColor: updatedBarData.ctaTextColor || userBars[barIndex].ctaTextColor || '#FFFFFF',
+    ctaLinkTarget: updatedBarData.ctaLinkTarget || userBars[barIndex].ctaLinkTarget || '_self',
   };
   saveUserBars(userId, userBars);
   return userBars[barIndex];
@@ -111,3 +138,4 @@ export const recordBarClick = async (userId: string, barId: string): Promise<Ann
   saveUserBars(userId, userBars);
   return userBars[barIndex];
 };
+

@@ -22,6 +22,8 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
 
 const formSchema = z.object({
   title: z.string().min(3, { message: "عنوان باید حداقل ۳ کاراکتر باشد." }),
@@ -32,7 +34,24 @@ const formSchema = z.object({
   timerBackgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر است." }).default('#FC4C1D'),
   timerTextColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر است." }).default('#FFFFFF'),
   timerStyle: z.enum(['square', 'circle', 'none'], { errorMap: () => ({ message: "یک نوع معتبر انتخاب کنید."}) }).default('square'),
+  timerPosition: z.enum(['left', 'right'], { errorMap: () => ({ message: "یک موقعیت معتبر انتخاب کنید."}) }).default('right'),
+  // CTA Fields
+  ctaText: z.string().optional().or(z.literal('')),
+  ctaLink: z.string().url({ message: "لینک CTA باید یک URL معتبر باشد." }).optional().or(z.literal('')),
+  ctaBackgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر است." }).default('#FC4C1D'),
+  ctaTextColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/i, { message: "کد رنگ هگز نامعتبر است." }).default('#FFFFFF'),
+  ctaLinkTarget: z.enum(['_self', '_blank'], { errorMap: () => ({ message: "یک گزینه معتبر انتخاب کنید."}) }).default('_self'),
+}).refine(data => {
+  if ((data.ctaText && data.ctaText.trim() !== '' && (!data.ctaLink || data.ctaLink.trim() === '')) ||
+      (data.ctaLink && data.ctaLink.trim() !== '' && (!data.ctaText || data.ctaText.trim() === ''))) {
+    return false;
+  }
+  return true;
+}, {
+  message: "متن دکمه و لینک دکمه هر دو باید پر شوند یا هر دو خالی باشند.",
+  path: ["ctaText"],
 });
+
 
 type BarEditorFormValues = z.infer<typeof formSchema>;
 
@@ -41,8 +60,8 @@ interface BarEditorProps {
   onSubmit: (data: BarEditorFormValues) => Promise<void>;
   onCancel?: () => void;
   isSubmitting: boolean;
-  expiryDate?: Date; // Passed from parent for countdown preview
-  expiryTime?: string; // Passed from parent for countdown preview
+  expiryDate?: Date;
+  expiryTime?: string;
 }
 
 interface CountdownValues {
@@ -67,27 +86,49 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
       timerBackgroundColor: initialData?.timerBackgroundColor || "#FC4C1D",
       timerTextColor: initialData?.timerTextColor || "#FFFFFF",
       timerStyle: initialData?.timerStyle || "square",
+      timerPosition: initialData?.timerPosition || "right", // Default to right
+      ctaText: initialData?.ctaText !== undefined ? initialData.ctaText : "",
+      ctaLink: initialData?.ctaLink !== undefined ? initialData.ctaLink : "",
+      ctaBackgroundColor: initialData?.ctaBackgroundColor || "#FC4C1D",
+      ctaTextColor: initialData?.ctaTextColor || "#FFFFFF",
+      ctaLinkTarget: initialData?.ctaLinkTarget || "_self",
     },
   });
 
  useEffect(() => {
-    // This effect runs when initialData prop changes from the parent (e.g., after AI color extraction)
-    // It will reset the form with the new initialData, including potentially AI-suggested colors.
     const currentValues = form.getValues();
+
     const newDefaults = {
-        title: initialData?.title || currentValues.title || "",
-        message: initialData?.message || currentValues.message || "",
-        backgroundColor: initialData?.backgroundColor || currentValues.backgroundColor || "#333333",
-        textColor: initialData?.textColor || currentValues.textColor || "#ffffff",
-        imageUrl: initialData?.imageUrl || currentValues.imageUrl || "",
-        timerBackgroundColor: initialData?.timerBackgroundColor || currentValues.timerBackgroundColor || "#FC4C1D",
-        timerTextColor: initialData?.timerTextColor || currentValues.timerTextColor || "#FFFFFF",
-        timerStyle: initialData?.timerStyle || currentValues.timerStyle || "square",
+      title: (initialData?.title && initialData.title.trim() !== "") ? initialData.title : (currentValues.title || ""),
+      message: (initialData?.message && initialData.message.trim() !== "") ? initialData.message : (currentValues.message || ""),
+      imageUrl: initialData?.imageUrl !== undefined ? initialData.imageUrl : (currentValues.imageUrl || ""),
+
+      backgroundColor: initialData?.backgroundColor || currentValues.backgroundColor || "#333333",
+      textColor: initialData?.textColor || currentValues.textColor || "#ffffff",
+      timerBackgroundColor: initialData?.timerBackgroundColor || currentValues.timerBackgroundColor || "#FC4C1D",
+      timerTextColor: initialData?.timerTextColor || currentValues.timerTextColor || "#FFFFFF",
+      ctaBackgroundColor: initialData?.ctaBackgroundColor || currentValues.ctaBackgroundColor || "#FC4C1D",
+      ctaTextColor: initialData?.ctaTextColor || currentValues.ctaTextColor || "#FFFFFF",
+
+      // For select/enum fields, prioritize current form value if valid, then initialData, then hardcoded default
+      timerStyle: currentValues.timerStyle && ['square', 'circle', 'none'].includes(currentValues.timerStyle as string)
+                    ? currentValues.timerStyle
+                    : (initialData?.timerStyle || "square"),
+      timerPosition: currentValues.timerPosition && (currentValues.timerPosition === 'left' || currentValues.timerPosition === 'right')
+                    ? currentValues.timerPosition
+                    : (initialData?.timerPosition || "right"), // Default to right
+      ctaLinkTarget: currentValues.ctaLinkTarget && (currentValues.ctaLinkTarget === '_self' || currentValues.ctaLinkTarget === '_blank')
+                    ? currentValues.ctaLinkTarget
+                    : (initialData?.ctaLinkTarget || "_self"),
+
+      ctaText: (initialData?.ctaText && initialData.ctaText.trim() !== "") ? initialData.ctaText : (currentValues.ctaText || ""),
+      ctaLink: (initialData?.ctaLink && initialData.ctaLink.trim() !== "") ? initialData.ctaLink : (currentValues.ctaLink || ""),
     };
+
     form.reset(newDefaults);
-    setPreviewImageUrl(initialData?.imageUrl || currentValues.imageUrl || '');
+    setPreviewImageUrl(newDefaults.imageUrl);
   }, [initialData, form]);
-  
+
   const watchedMessage = form.watch("message");
   const watchedImageUrl = form.watch("imageUrl");
   const watchedBgColor = form.watch("backgroundColor");
@@ -95,6 +136,11 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
   const watchedTimerBgColor = form.watch("timerBackgroundColor");
   const watchedTimerTextColor = form.watch("timerTextColor");
   const watchedTimerStyle = form.watch("timerStyle");
+  const watchedTimerPosition = form.watch("timerPosition");
+  const watchedCtaText = form.watch("ctaText");
+  const watchedCtaLink = form.watch("ctaLink");
+  const watchedCtaBgColor = form.watch("ctaBackgroundColor");
+  const watchedCtaTextColor = form.watch("ctaTextColor");
 
   useEffect(() => {
     if (watchedImageUrl !== previewImageUrl) {
@@ -121,9 +167,9 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                     minutes = parseInt(timeParts[1], 10);
                 }
             }
-            
+
             targetTime = new Date(datePart.getFullYear(), datePart.getMonth(), datePart.getDate(), hours, minutes, 0, 0).getTime();
-            
+
             const distance = targetTime - now;
 
             if (distance < 0) {
@@ -136,7 +182,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
             const dHours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const dMinutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const dSeconds = Math.floor((distance % (1000 * 60)) / 1000);
-            
+
             setCountdownValues({
                 days,
                 hours: String(dHours).padStart(2, '0'),
@@ -145,10 +191,10 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
             });
         };
 
-        updateCountdown(); 
+        updateCountdown();
         intervalId = setInterval(updateCountdown, 1000);
     } else {
-        setCountdownValues(null); 
+        setCountdownValues(null);
     }
 
     return () => {
@@ -163,16 +209,16 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
     if (styleType === 'square') {
         styleClasses = "rounded-md";
     } else if (styleType === 'circle') {
-        styleClasses = "rounded-full !w-16 !h-16"; // Ensure circle is circle
+        styleClasses = "rounded-full !w-16 !h-16";
     } else if (styleType === 'none') {
-        styleClasses = "p-0 w-auto h-auto shadow-none bg-transparent"; 
+        styleClasses = "p-0 w-auto h-auto shadow-none bg-transparent";
     }
 
     const effectiveBgColor = styleType === 'none' ? 'transparent' : bgColor;
-    const effectiveTextColor = styleType === 'none' ? textColor : textColor; // Text color always applies
-    
+    const effectiveTextColor = styleType === 'none' ? watchedTextColor : textColor; // Use watchedTextColor for 'none' to match bar text potentially
+
     return (
-        <div 
+        <div
             className={cn(baseClasses, styleClasses)}
             style={{ backgroundColor: effectiveBgColor, color: effectiveTextColor }}
         >
@@ -209,15 +255,12 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                 <FormItem>
                   <FormLabel>پیام</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="پیام اعلانات خود را وارد کنید" className="min-h-[150px]" {...field} />
+                    <Textarea placeholder="پیام اعلانات خود را وارد کنید" className="min-h-[100px]" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </div>
-
-          <div className="space-y-6">
              <FormField
               control={form.control}
               name="imageUrl"
@@ -267,7 +310,11 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
               />
             </div>
 
-            <h4 className="text-md font-semibold pt-2 border-t">تنظیمات تایمر</h4>
+          </div>
+
+          <div className="space-y-6">
+             <Separator />
+            <h4 className="text-md font-semibold">تنظیمات تایمر</h4>
             <div className="grid grid-cols-2 gap-4">
                <FormField
                 control={form.control}
@@ -308,7 +355,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>نوع نمایش تایمر</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} dir="rtl"> {/* Ensure value is bound */}
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue="square" dir="rtl">
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="یک نوع را انتخاب کنید" />
@@ -324,23 +371,174 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                 </FormItem>
               )}
             />
+             <FormField
+              control={form.control}
+              name="timerPosition"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>موقعیت تایمر</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue="right" dir="rtl">
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="موقعیت تایمر را انتخاب کنید" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="left">چپ پیام</SelectItem>
+                      <SelectItem value="right">راست پیام</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Separator />
+            <h4 className="text-md font-semibold">تنظیمات دکمه فراخوان (CTA)</h4>
+             <FormField
+              control={form.control}
+              name="ctaText"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>متن دکمه CTA (اختیاری)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="مثال: بیشتر بدانید" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="ctaLink"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>لینک دکمه CTA (اختیاری)</FormLabel>
+                  <FormControl>
+                    <Input dir="ltr" placeholder="https://example.com/offer" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="ctaBackgroundColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>رنگ پس‌زمینه CTA</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center gap-2">
+                        <Input type="color" value={field.value} onChange={field.onChange} className="p-0 h-10 w-12 cursor-pointer" />
+                        <Input dir="ltr" type="text" placeholder="#FC4C1D" value={field.value} onChange={field.onChange} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="ctaTextColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>رنگ متن CTA</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center gap-2">
+                        <Input type="color" value={field.value} onChange={field.onChange} className="p-0 h-10 w-12 cursor-pointer" />
+                        <Input dir="ltr" type="text" placeholder="#FFFFFF" value={field.value} onChange={field.onChange} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="ctaLinkTarget"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>نحوه باز شدن لینک CTA</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue="_self"
+                      className="flex space-x-2 rtl:space-x-reverse"
+                      dir="rtl"
+                    >
+                      <FormItem className="flex items-center space-x-2 rtl:space-x-reverse space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="_self" />
+                        </FormControl>
+                        <FormLabel className="font-normal">در همین صفحه</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 rtl:space-x-reverse space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="_blank" />
+                        </FormControl>
+                        <FormLabel className="font-normal">در صفحه جدید</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         </div>
-        
-        <div className="space-y-4 pt-8 border-t">
+
+        <div className="space-y-4 pt-8"> {/* Removed border-t here, will be added by Separator if needed */}
           <h3 className="text-lg font-semibold text-center">پیش‌نمایش زنده</h3>
-          <div 
+          <div
             dir="rtl"
             className="p-3 rounded-lg shadow-xl w-full flex items-center justify-between gap-4 mx-auto overflow-hidden"
-            style={{ 
-              backgroundColor: watchedBgColor || '#333333', 
+            style={{
+              backgroundColor: watchedBgColor || '#333333',
               color: watchedTextColor || '#ffffff',
               minHeight: '80px',
             }}
           >
-            {/* Timer on the left for RTL */}
+            {/* Message and CTA content container */}
+            <div className={cn(
+                "flex items-center gap-3 flex-grow",
+                watchedTimerPosition === 'right' ? "order-1" : "order-2", 
+            )}>
+              {previewImageUrl && form.getValues("imageUrl") && (
+                <Image
+                  src={previewImageUrl}
+                  alt="پیش‌نمایش"
+                  width={32} height={32}
+                  className="rounded-sm object-contain shrink-0"
+                  data-ai-hint="icon logo"
+                  onError={() => {}} // Prevent error for broken images during preview
+                />
+              )}
+              <span className="text-sm text-right">{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
+               {watchedCtaText && watchedCtaLink && (
+                <a
+                  href={watchedCtaLink || '#'}
+                  target={form.getValues("ctaLinkTarget")}
+                  className="px-3 py-1.5 rounded-md text-xs font-medium shrink-0 whitespace-nowrap"
+                  style={{
+                    backgroundColor: watchedCtaBgColor,
+                    color: watchedCtaTextColor,
+                    textDecoration: 'none',
+                  }}
+                  onClick={(e) => e.preventDefault()} // Prevent navigation in preview
+                >
+                  {watchedCtaText}
+                </a>
+              )}
+            </div>
+
+            {/* Timer container */}
             {countdownValues && (
-              <div className="flex gap-1.5 items-center shrink-0" dir="ltr"> {/* dir ltr for timer numbers */}
+              <div className={cn(
+                  "flex gap-1.5 items-center shrink-0",
+                   watchedTimerPosition === 'right' ? "order-2" : "order-1" 
+              )} dir="ltr"> {/* Timer elements are LTR */}
                 {countdownValues.days > 0 && (
                   <TimerBox value={countdownValues.days} unit="روز" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
                 )}
@@ -349,28 +547,15 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                 <TimerBox value={countdownValues.seconds} unit="ثانیه" bgColor={watchedTimerBgColor} textColor={watchedTimerTextColor} styleType={watchedTimerStyle} />
               </div>
             )}
-            {/* Message content on the right for RTL */}
-            <div className="flex items-center gap-3 flex-grow justify-start text-right"> 
-              {previewImageUrl && form.getValues("imageUrl") && ( 
-                <Image 
-                  src={previewImageUrl} 
-                  alt="پیش‌نمایش" 
-                  width={32} height={32} 
-                  className="rounded-sm object-contain shrink-0" 
-                  data-ai-hint="icon logo"
-                  onError={() => { /* console.error("Error loading preview image") */ }}
-                />
-              )}
-              <span className="text-sm text-right flex-grow">{watchedMessage || "پیام شما در اینجا نمایش داده می‌شود."}</span>
-            </div>
-            
           </div>
           <p className="text-sm text-muted-foreground text-center">
             توجه: این یک پیش‌نمایش ساده است. ظاهر واقعی ممکن است بر اساس CSS سایت شما متفاوت باشد.
           </p>
         </div>
-        
-        <div className="flex space-x-2 rtl:space-x-reverse justify-end mt-8"> {/* Increased margin top */}
+         {/* Separator before action buttons */}
+        <Separator className="my-6" />
+
+        <div className="flex space-x-2 rtl:space-x-reverse justify-end">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
               <Icons.Cancel className="me-2 h-4 w-4" /> انصراف
