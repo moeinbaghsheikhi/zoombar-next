@@ -259,79 +259,14 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                 <FormItem>
                   <FormLabel>پیام</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="پیام اعلانات خود را وارد کنید" className="min-h-[100px]" {...field} />
+                    <Textarea placeholder="پیام اعلانات خود را وارد کنید" className="min-h-[60px]" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="fontSize"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>اندازه فونت پیام و دکمه (پیکسل)</FormLabel>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => form.setValue("fontSize", Math.max(8, (field.value || 14) - 1))}
-                      disabled={isSubmitting || (field.value || 14) <= 8}
-                    >
-                      <Icons.Minus className="h-4 w-4" />
-                    </Button>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={8}
-                        max={48}
-                        {...field}
-                        onChange={(e) => {
-                            const val = parseInt(e.target.value, 10);
-                            if (isNaN(val)) field.onChange(14); // default if NaN
-                            else if (val < 8) field.onChange(8);
-                            else if (val > 48) field.onChange(48);
-                            else field.onChange(val);
-                        }}
-                        value={field.value || 14}
-                        className="w-20 text-center"
-                        dir="ltr"
-                      />
-                    </FormControl>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => form.setValue("fontSize", Math.min(48, (field.value || 14) + 1))}
-                      disabled={isSubmitting || (field.value || 14) >= 48}
-                    >
-                      <Icons.Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <FormDescription>اندازه فونت برای متن اصلی پیام و متن دکمه فراخوان.</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
 
-          <div className="space-y-6">
-             <FormField
-              control={form.control}
-              name="imageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL تصویر (اختیاری)</FormLabel>
-                  <FormControl>
-                    <Input dir="ltr" placeholder="https://example.com/image.png" {...field} />
-                  </FormControl>
-                  <FormDescription>لینک به تصویری برای نمایش در نوار.</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-2 gap-4">
+<div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="backgroundColor"
@@ -365,7 +300,26 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                 )}
               />
             </div>
-            <Separator />
+           
+          </div>
+
+          <div className="space-y-6">
+             {/* <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL تصویر (اختیاری)</FormLabel>
+                  <FormControl>
+                    <Input dir="ltr" placeholder="https://example.com/image.png" {...field} />
+                  </FormControl>
+                  <FormDescription>لینک به تصویری برای نمایش در نوار.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            /> */}
+           
+            {/* <Separator /> */}
             <h4 className="text-md font-semibold">تنظیمات تایمر</h4>
             <div className="grid grid-cols-2 gap-4">
                <FormField
@@ -444,9 +398,17 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                 </FormItem>
               )}
             />
+          </div>
+          
+        </div>
+          <div>
             <Separator />
+            <br />
             <h4 className="text-md font-semibold">تنظیمات دکمه فراخوان (CTA)</h4>
-             <FormField
+            <br />
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <FormField
               control={form.control}
               name="ctaText"
               render={({ field }) => (
@@ -472,7 +434,6 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="ctaBackgroundColor"
@@ -539,9 +500,56 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
               )}
             />
           </div>
-        </div>
-        
         <div className="space-y-4 pt-8">
+        <FormField
+              control={form.control}
+              name="fontSize"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>اندازه فونت پیام و دکمه (پیکسل)</FormLabel>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => form.setValue("fontSize", Math.max(8, (field.value || 14) - 1))}
+                      disabled={isSubmitting || (field.value || 14) <= 8}
+                    >
+                      <Icons.Minus className="h-4 w-4" />
+                    </Button>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={8}
+                        max={48}
+                        {...field}
+                        onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (isNaN(val)) field.onChange(14); // default if NaN
+                            else if (val < 8) field.onChange(8);
+                            else if (val > 48) field.onChange(48);
+                            else field.onChange(val);
+                        }}
+                        value={field.value || 14}
+                        className="w-20 text-center"
+                        dir="ltr"
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => form.setValue("fontSize", Math.min(48, (field.value || 14) + 1))}
+                      disabled={isSubmitting || (field.value || 14) >= 48}
+                    >
+                      <Icons.Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <FormDescription>اندازه فونت برای متن اصلی پیام و متن دکمه فراخوان.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           <h3 className="text-lg font-semibold text-center">پیش‌نمایش زنده</h3>
           <div
             dir="rtl"
@@ -603,6 +611,7 @@ export function BarEditor({ initialData, onSubmit, onCancel, isSubmitting, expir
             توجه: این یک پیش‌نمایش ساده است. ظاهر واقعی ممکن است بر اساس CSS سایت شما متفاوت باشد.
           </p>
         </div>
+        
         <Separator className="my-6" />
 
         <div className="flex space-x-2 rtl:space-x-reverse justify-end">
